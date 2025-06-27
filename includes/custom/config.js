@@ -69,15 +69,36 @@ const customConfig = {
   //    { name: "event_value", type: "decimal" },
   //    { name: "event_value", type: "string", renameTo: "event_value_string" }
   // ],
-  CUSTOM_EVENT_PARAMS_ARRAY: [],
+  CUSTOM_EVENT_PARAMS_ARRAY: [
+  // example set: this will populate 5 fields in the `event_params_custom` column in the `ga4_events` table
+  // known limitation: the output column names must be valid. use letters and underscores to be safe 
+    {  type: "string",  name: "application_status" },
+    {  type: "string",  name: "monetate_id" },
+    {  type: "string",  name: "order_discount" },
+    {  type: "string",  name: "personalization_value" },
+    {  type: "string",  name: "fullfillment_method" },
+    {  type: "string",  name: "monetate_status" },
+    {  type: "string",  name: "coupon" },
+    {  type: "string",  name: "page_type" },
+    {  type: "string",  name: "checkout_type" },
+    {  type: "string",  name: "communication_type" },
+    {  type: "string",  name: "group_type" },
+    {  type: "string",  name: "interaction_type" },
+    {  type: "string",  name: "search_type" },
+    {  type: "string",  name: "video_current_type" },
+    {  type: "string",  name: "nav_type" },
+    {  type: "string",  name: "payment_type" }
+],
 
   // user properties
   // example:
   // CUSTOM_USER_PROPERTIES_ARRAY: [
   //    { name: "lifetime_value",   type: "decimal" }
   // ],
-  CUSTOM_USER_PROPERTIES_ARRAY: [],
-
+CUSTOM_USER_PROPERTIES_ARRAY: [
+    {  type: "string",  name: "customer_id" },   
+    {  type: "string", name: "login_status" }
+],
 
  CUSTOM_ITEM_PARAMS_TO_EXCLUDE: [], // by default,  all custom arams are unnested except thse listed here
   // item custom dimensions and metrics
@@ -108,6 +129,9 @@ const customConfig = {
   // for including/excluding NULL values, use the empty string ( "" )
   HOSTNAME_EXCLUDE: [],
   HOSTNAME_INCLUDE_ONLY: [],
+
+// Key events to include as metrics. up to 5
+  KEY_EVENTS_ARRAY: ["view_item","add_to_cart","view_cart","begin_checkout","purchase","login","vsu_complete"],
 
   // Set this to true to enable "Organic AI" (and possible other future channels that
   // are not compatible with GA4)
