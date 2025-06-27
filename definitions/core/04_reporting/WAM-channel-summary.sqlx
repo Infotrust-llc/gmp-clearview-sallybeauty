@@ -1,0 +1,74 @@
+
+  /*
+  This file is part of "GMP Clearview" package.
+  Copyright (C)  2025 Infotrust 
+  Alina Zilbergerts, Trish Dothkar,
+  -- */
+
+
+config {
+    type: "view",
+    tags: ["wam","prod"],
+    // materialized: true,
+    schema: "gmp_reporting"
+}
+
+ -- WAM-channel_dailyview - BASE SESSIONS table
+
+SELECT 'WTD' as period,cross_channel_campaign.primary_channel_group channel_group,
+        count(distinct session_id) sessions,
+        count(distinct if(is_engaged_session, session_id, NULL)) engaged_sessions,
+        count(distinct user_pseudo_id) users,
+        sum(purchase_revenue) revenue,
+        sum(transactions) transactions,
+  FROM ${ref("ga4_sessions")}
+  where session_date >= DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)) - INTERVAL 1 WEEK
+        AND session_date < DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY))
+        group by channel_group
+
+UNION ALL
+SELECT
+'MTD' as period, cross_channel_campaign.primary_channel_group channel_group,
+    COUNT(DISTINCT session_id) AS sessions,
+    count(distinct if(is_engaged_session, session_id, NULL)) engaged_sessions,
+    COUNT(DISTINCT user_pseudo_id) AS users,
+     sum(transactions) transactions,
+    SUM(purchase_revenue) AS purchase_revenue,
+
+  from ${ref("ga4_sessions")}
+  where session_date >= DATE_TRUNC(DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY), MONTH) 
+    AND session_date <= DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY)
+        group by channel_group
+  UNION ALL
+SELECT
+'QTD' as period, cross_channel_campaign.primary_channel_group channel_group,
+    COUNT(DISTINCT session_id) AS sessions,
+    count(distinct if(is_engaged_session, session_id, NULL)) engaged_sessions,
+    COUNT(DISTINCT user_pseudo_id) AS users,
+    sum(transactions) transactions,
+    SUM(purchase_revenue) AS purchase_revenue,
+
+  from ${ref("ga4_sessions")}
+  where session_date >= 
+               CASE 
+                WHEN EXTRACT(MONTH FROM  DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY)) BETWEEN 10 AND 12 THEN DATE(EXTRACT(YEAR FROM  DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY)), 10, 1)
+                WHEN EXTRACT(MONTH FROM  DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY)) BETWEEN 1 AND 3 THEN DATE(EXTRACT(YEAR FROM  DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY)), 1, 1)
+                WHEN EXTRACT(MONTH FROM  DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY)) BETWEEN 4 AND 6 THEN DATE(EXTRACT(YEAR FROM  DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY)), 4, 1)
+                WHEN EXTRACT(MONTH FROM  DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY)) BETWEEN 7 AND 9 THEN DATE(EXTRACT(YEAR FROM  DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY)), 7, 1)
+            END
+        AND session_date <= DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY)
+        group by channel_group
+
+UNION ALL
+SELECT
+'YTD' as period,cross_channel_campaign.primary_channel_group channel_group,
+    COUNT(DISTINCT session_id) AS sessions,
+    count(distinct if(is_engaged_session, session_id, NULL)) engaged_sessions,
+    COUNT(DISTINCT user_pseudo_id) AS users,
+     sum(transactions) transactions,
+    SUM(purchase_revenue) AS purchase_revenue,
+
+  from ${ref("ga4_sessions")}
+  where session_date >= DATE_TRUNC(DATE(EXTRACT(YEAR FROM CURRENT_DATE()) - IF(EXTRACT(MONTH FROM CURRENT_DATE()) < 10, 1, 0), 10, 1), MONTH)
+        AND session_date <= DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY) 
+        group by channel_group

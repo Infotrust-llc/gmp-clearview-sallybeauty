@@ -28,6 +28,23 @@ const getConfig = () => {
   return { ...coreConfig, ...customConfig };
 };
 
+/* Generates SQL for PIVOT clause */
+const getSqlPivotEventParams = (event_params)=> {
+   let value = "";
+   value = ` PIVOT ( MIN(param_value) FOR param_name IN (${event_params})  ) `
+return `${value}`;
+}
+/** Generates SQL code that counts instances of events 
+ * specified in KEY_EVENT_ARRAY , to be included as a metric
+ */
+const getSqlSelectEventsAsMetrics = (config) => {
+  return Object.entries(config)
+    .map(([key, value]) => {
+       return `countif(lower(event_name)='${value.toLowerCase()}') AS ${value.toLowerCase()}`;
+    })
+    .join(", ");
+}
+
 /**
  * Generates array of all event parameter keys in a comma-separated string
  * for the past year(?), to be used in PIVOT statment 
@@ -98,6 +115,7 @@ const generateParamSQL = (config, column = "event_params") => {
  * @returns {string} SQL fragment for multiple parameters unnest
  */
 const generateParamsSQL = (config_array, column = "event_params") => {
+  console.log(config_array);
   return `
       ${config_array
         .map((config) => {
@@ -693,7 +711,9 @@ const helpers = {
   storageLabels,
   executionLabels,
   storageUpdateLabels,
-  generateAlterTableStatements
+  generateAlterTableStatements,
+  getSqlSelectEventsAsMetrics,
+  getSqlPivotEventParams
 };
 
 module.exports = {

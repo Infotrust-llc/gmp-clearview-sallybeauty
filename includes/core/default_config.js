@@ -93,7 +93,7 @@ const CORE_PARAMS_ARRAY = [
         name: "entrances"
     },
     {
-        type: "string",
+        type: "int",      //"string"  //AZ looks like with coalescing all values for session_engaged, it inflates # of engaged sessions. Lets try just int_value - it matches closely to GA4 UI
         name: "session_engaged",
         cleaningMethod: safeCastSQL
     },
@@ -620,31 +620,10 @@ const CUSTOM_EVENT_PARAMS_TO_EXCLUDE = ['batch_event_index','batch_ordering_id',
 const CUSTOM_EVENT_PARAMS_ARRAY = [
   // example set: this will populate 5 fields in the `event_params_custom` column in the `ga4_events` table
   // known limitation: the output column names must be valid. use letters and underscores to be safe 
-    {
-        type: "string",
-        name: "application_status"
-    },
-    {
-        type: "string",
-        name: "login_status"
-    },
-    {
-        type: "string",
-        name: "monetate_id"
-    },
-    {
-        type: "string",
-        name: "monetate_status"
-    },
-    {
-        type: "string",
-        name: "customer_id"
-    },
+    
 ];
 
-
-const CUSTOM_USER_PROPERTIES_ARRAY = [
-];
+const CUSTOM_USER_PROPERTIES_ARRAY = [];
 
 const CUSTOM_ITEM_PARAMS_TO_EXCLUDE = []; // by default,  all custom item params are unnested except thse listed here
 const CUSTOM_ITEM_PARAMS_ARRAY = [
@@ -675,6 +654,9 @@ const EVENTS_TO_EXCLUDE = [];
 const HOSTNAME_EXCLUDE = []; // a list of hostnames to exclude (leave all others in)
 const HOSTNAME_INCLUDE_ONLY = []; // a list of hostnames to include (discard all others)
 
+// if you want process key events as a metric, include them here 
+const KEY_EVENTS_ARRAY = [];
+
 // do not change anything below this line
 const SOCIAL_PLATFORMS_REGEX = ['pinterest',
                                 'facebook',
@@ -697,6 +679,7 @@ const TABLES_OUTPUT = [
 const coreConfig = {
     CORE_PARAMS_ARRAY,
     URL_PARAMS_ARRAY,
+    KEY_EVENTS_ARRAY,
     CUSTOM_EVENT_PARAMS_ARRAY,
     CUSTOM_EVENT_PARAMS_TO_EXCLUDE,
     GA4_START_DATE,

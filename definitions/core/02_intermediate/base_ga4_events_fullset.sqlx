@@ -1,34 +1,20 @@
-/*
-	This file is part of "GA4 Dataform Package".
-	Copyright (C) 2023-2024 Superform Labs <support@ga4dataform.com>
-	Artem Korneev, Jules Stuifbergen,
-	Johan van de Werken, Krisztián Korpa,
-	Simon Breton
-
-	This program is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, version 3 of the License.
-
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License in the LICENSE.txt file for more details.
-
-	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+  /*
+  This file is part of "GMP Clearview" package.
+  Copyright (C)  2025 Infotrust 
+  Alina Zilbergerts, Trish Dothkar,
+  -- */
 
 config {
   type: "incremental",
-  tags: [dataform.projectConfig.vars.GA4_DATASET,"events","outputs"],
-  schema: dataform.projectConfig.vars.OUTPUTS_DATASET,
+  tags: [dataform.projectConfig.vars.GA4_DATASET,"base_events","dev"],
   description: "Output events table: unnested, cleaned, clustered data with several fixes",
+  database: dataform.projectConfig.vars.OUTPUT_PROJECT,
+  schema: dataform.projectConfig.vars.TRANSFORMATIONS_DATASET,
+  name: "base_ga4_events_all",
   bigquery: {
     partitionBy: "event_date",
-    clusterBy: ["event_name", "session_id"],
-    labels: require("includes/core/helpers.js").helpers.storageLabels()
-  },
-    columns: require("includes/core/documentation/helpers.js").ga4Events
+    clusterBy: ["event_name", "session_id"]
+  }
 }
 
 
@@ -38,14 +24,17 @@ js {
   const config = helpers.getConfig();
   /* check if there's invalid columns or dupe columns in the custom column definitions */
   helpers.checkColumnNames(config);
-}
+  const fieldnames_sql = helpers.getEventParamKeysArray(config, ref("events_fresh_*"), "event_params");
+  const base_tbl = self();
 
+}
 
 
 /* incrementality */
 pre_operations {
+  -- declare params string default (${json_custom_params}); 
   declare date_checkpoint DATE;
-  set @@query_label = "${helpers.executionLabels()}";
+  -- set @@query_label = "${helpers.executionLabels()}";
   set date_checkpoint = (
     ${when(incremental(),
       `select
@@ -71,8 +60,8 @@ with query_source as (
     where true
 
     -- incrementality clause
-    and parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) >= '2025-05-01' -- have to use event_date instead of _table_suffix if we referer to events_2025* tables
-
+    and parse_date('%Y%m%d', regexp_extract(event_date,'[0-9]+')) >= date_checkpoint -- have to use event_date instead of _table_suffix if we referer to events_2025* tables
+    -- and _table_suffix >= '0605'
     -- filters go here
 
     -- intraday filter: exclude
@@ -88,7 +77,7 @@ with query_source as (
     -- only include wanted hostnames
     and ${helpers.generateFilterTypeFromListSQL("include", "device.web_info.hostname", config.HOSTNAME_INCLUDE_ONLY)}
 
-    -- leave cookieless pings in - those will be in the events table do not have a session
+    -- leave cookieless pings in - those will be in the events table and  do not have a session
     -- and user_pseudo_id is not null
 
 ),
@@ -96,13 +85,15 @@ with query_source as (
 step1 as (
 
   select
-
+    '${dataform.projectConfig.vars.GA4_DATASET}' as property_id,
     -- first chunk: the basics
+    event_timestamp,
     event_name,
     table_suffix,
     parse_date('%Y%m%d', event_date) as event_date, -- partition column
     date_diff(current_date(), cast(event_date as date format 'YYYYMMDD'), day) > ${config.DATA_IS_FINAL_DAYS} as is_final, -- used for incrementality
-
+    stream_id,
+    platform,
     struct(
       -- timestamps
       event_timestamp,
@@ -288,63 +279,63 @@ step1 as (
         traffic_source.medium
     ) as first_user_traffic_source,
 
-    stream_id,
-    platform,
-    '${dataform.projectConfig.vars.GA4_DATASET}' as property_id,
 
     -- repack the items array struct
-    array(
-      (
-        select
-          struct(
-            items.item_id,
-            items.item_name,
-            items.item_brand,
-            items.item_variant,
-            items.item_category,
-            items.item_category2,
-            items.item_category3,
-            items.item_category4,
-            items.item_category5,
-            items.price_in_usd,
-            items.price,
-            items.quantity,
-            items.item_revenue_in_usd,
-            items.item_revenue,
-            items.item_refund_in_usd,
-            items.item_refund,
-            items.coupon,
-            items.affiliation,
-            items.location_id,
-            items.item_list_id,
-            items.item_list_name,
-            items.item_list_index,
-            items.promotion_id,
-            items.promotion_name,
-            items.creative_name,
-            items.creative_slot
-            ${when(config.CUSTOM_ITEM_PARAMS_ARRAY.length > 0,
-                `, ${helpers.generateStructSQL(
-                helpers.generateParamsSQL(
-                    config.CUSTOM_ITEM_PARAMS_ARRAY, 
-                    "items.item_params"
-                )
-            )
-            } as item_params_custom`)}
-          )
-        from unnest(items) as items
-      )
-    ) as items,
+    -- AZ Items will move to base_ga4_items table
+    -- array(
+    --   (
+    --     select
+    --       struct(
+    --         items.item_id,
+    --         items.item_name,
+    --         items.item_brand,
+    --         items.item_variant,
+    --         items.item_category,
+    --         items.item_category2,
+    --         items.item_category3,
+    --         items.item_category4,
+    --         items.item_category5,
+    --         items.price_in_usd,
+    --         items.price,
+    --         items.quantity,
+    --         items.item_revenue_in_usd,
+    --         items.item_revenue,
+    --         items.item_refund_in_usd,
+    --         items.item_refund,
+    --         items.coupon,
+    --         items.affiliation,
+    --         items.location_id,
+    --         items.item_list_id,
+    --         items.item_list_name,
+    --         items.item_list_index,
+    --         items.promotion_id,
+    --         items.promotion_name,
+    --         items.creative_name,
+    --         items.creative_slot
+    --         ${when(config.CUSTOM_ITEM_PARAMS_ARRAY.length > 0,
+    --             `, ${helpers.generateStructSQL(
+    --             helpers.generateParamsSQL(
+    --                 config.CUSTOM_ITEM_PARAMS_ARRAY, 
+    --                 "items.item_params"
+    --             )
+    --         )
+    --         } as item_params_custom`)}
+    --       )
+    --     from unnest(items) as items
+    --   )
+    -- ) as items,
 
 
     -- the programatically added SQL:
     -- grab all core event parameters
     ${helpers.generateStructSQL(helpers.generateParamsSQL(config.CORE_PARAMS_ARRAY))} as event_params,
+
     -- and the custom ones
     ${when(
       config.CUSTOM_EVENT_PARAMS_ARRAY.length > 0,
         `${helpers.generateStructSQL(helpers.generateParamsSQL(config.CUSTOM_EVENT_PARAMS_ARRAY))} as event_params_custom,`
       )} 
+  
     -- add user_properties
     ${when(
       config.CUSTOM_USER_PROPERTIES_ARRAY.length > 0,      
@@ -397,6 +388,17 @@ step3 as (
   -- repack extracted parameters to cleaner structs, and create event_id
 
   select
+     -- create event ID
+    farm_fingerprint(
+      event_name ||
+      time.event_timestamp ||
+      coalesce(user_pseudo_id, 'no') ||
+      coalesce(event_params.ga_session_id, 0) ||
+      coalesce(batch.batch_page_id, 0) ||
+      coalesce(batch.batch_ordering_id,0) ||
+      coalesce(batch.batch_event_index,0) ||
+      coalesce(event_params.engagement_time_msec, 0)
+    ) as event_id,
     *,
     -- standard url parameters from config
     ${helpers.generateStructSQL(helpers.generateURLParamsSQL(
@@ -418,18 +420,8 @@ step3 as (
       'event_params.page_location',
       config.CLICK_IDS_ARRAY,
       false
-    ))} as click_ids,
-    -- create event ID
-    farm_fingerprint(
-      event_name ||
-      time.event_timestamp ||
-      coalesce(user_pseudo_id, 'no') ||
-      coalesce(event_params.ga_session_id, 0) ||
-      coalesce(batch.batch_page_id, 0) ||
-      coalesce(batch.batch_ordering_id,0) ||
-      coalesce(batch.batch_event_index,0) ||
-      coalesce(event_params.engagement_time_msec, 0)
-    ) as event_id
+    ))} as click_ids
+ 
   from step2
 ),
 
@@ -572,6 +564,15 @@ fixed as (
 
 add_meta_info as (
   select
+      -- make session_id - can be NULL (if anonymous ping or MP hit without session_id)
+    -- farm_fingerprint(
+    --   user_pseudo_id || event_params.ga_session_id
+    --  ) as session_id,
+  -- coalesce(  -- AZ THIS IS A BUG - cannot coalesce user_pseudo_id and ga_session_id
+  concat(
+      user_pseudo_id , CAST(event_params.ga_session_id AS STRING)
+     ) as session_id,
+     
    * except(
         time
       ),
@@ -587,13 +588,7 @@ add_meta_info as (
        false
     ) as is_measurement_protocol_hit,
 
-    -- make session_id - can be NULL (if anonymous ping or MP hit without session_id)
-    -- farm_fingerprint(
-    --   user_pseudo_id || event_params.ga_session_id
-    --  ) as session_id,
-  coalesce( 
-      user_pseudo_id , CAST(event_params.ga_session_id AS STRING)
-     ) as session_id,
+
 
     -- all page information in a page struct
     struct (

@@ -21,8 +21,9 @@
 config {
   type: "incremental",
   description: "Intermediate incremental sessions table with modeling helpers implemented. 1 row per unique session_id. Contains only valid sessions.",
+  database: dataform.projectConfig.vars.OUTPUT_PROJECT,
   schema: dataform.projectConfig.vars.TRANSFORMATIONS_DATASET,
-  tags:[dataform.projectConfig.vars.GA4_DATASET,"sessions","intermediate"],
+  tags:[dataform.projectConfig.vars.GA4_DATASET,"sessions","prod"],
   bigquery: {
     partitionBy: "session_date",
     clusterBy: [ "session_id" ],
@@ -59,15 +60,16 @@ pre_operations {
 
 with events as (
   select
-      min(event_date) as session_date,
+    '${dataform.projectConfig.vars.GA4_DATASET}' as property_id,
+    min(event_date) as session_date,
     session_id,
     stream_id,
-    user_pseudo_id,
+    user_pseudo_id, 
+    max(is_active_user) is_active_user,
     ${helpers.generateArrayAggSQL('user_id',false, false)}, -- to account for potentially multiple
-     '${dataform.projectConfig.vars.GA4_DATASET}' as property_id,
+
     -- min(table_suffix) as table_suffix,
     -- count(distinct table_suffix) > 1 as is_multiday_session,  -- for later AZ
-    max(data_is_final) as is_final, --return true if session started on an is_final day
 
     -- first
     ${helpers.generateArrayAggSQL('device')},
@@ -78,10 +80,10 @@ with events as (
     --  traffic info
     -- ${helpers.generateArrayAggSQL('session_traffic_source_last_click', 'session_traffic_source_last_click')} ,
      
-    ${helpers.generateArrayAggSQL('page_location','landing_page')}  ,
-    ${helpers.generateArrayAggSQL('page_location','exit_page', false)} ,
+    ${helpers.generateArrayAggSQL('page.location','landing_page')}  ,
+    ${helpers.generateArrayAggSQL('page.location','exit_page', false)} ,
 
-    ${helpers.generateArrayAggSQL('cross_channel_campaign', 'cross_channel_campaign')} ,
+    ${helpers.generateArrayAggSQL('session_traffic_source_last_click.cross_channel_campaign', 'cross_channel_campaign')} ,
     -- struct(
     --   ${helpers.generateArrayAggSQL('page.location','landing_page_location')},
     --   ${helpers.generateArrayAggSQL('page.path','landing_page_path')},
@@ -111,13 +113,25 @@ with events as (
     -- max(time.event_timestamp_utc) as session_end_timestamp_utc,
     -- sum(event_params.engagement_time_msec) as engagement_time_msec,
 
-        logical_or(session_engaged = "1") as is_engaged_session,
+        logical_or(event_params.session_engaged = 1) as is_engaged_session,
         min(timestamp_micros(event_timestamp)) as session_start_timestamp_utc,
         max(timestamp_micros(event_timestamp)) as session_end_timestamp_utc,
-        sum(cast(engagement_time_msec as int64)) as engagement_time_msec,
+        sum(cast(event_params.engagement_time_msec as int64)) as engagement_time_msec,
         count(event_name) events,
-        countif(event_name="page_view") pageviews
+        countif(event_name="page_view") pageviews,
 
+        sum(if(event_name="purchase", ecommerce.purchase_revenue, 0)) purchase_revenue,
+        sum(if(event_name="purchase", ecommerce.total_item_quantity,0)) total_item_quantity,
+        sum(if(event_name="purchase", ecommerce.unique_items,0)) unique_items, 
+        count(distinct if(event_name="purchase", ecommerce.transaction_id, NULL)) transactions,
+
+        -- and key events as metrics
+        ${when(
+          config.KEY_EVENTS_ARRAY.length > 0,
+            `${helpers.getSqlSelectEventsAsMetrics(config.KEY_EVENTS_ARRAY)}  `
+          )} ,
+
+       max(is_final) as is_final --return true if session started on an is_final day
     -- struct(
     --   logical_or(event_params.session_engaged = "1") as is_engaged_session,
     --   logical_or(has_source) as is_with_source,
@@ -126,17 +140,17 @@ with events as (
     --   logical_or(url_params._gl is not null) as is_cross_domain
     -- ) as session_info
 
-  from ${ref("base_ga4_events")}
+  from   ${ref("base_ga4_events")}
   where event_date >= date_checkpoint -1 -- grab 1 extra day, to include sessions starting earlier
 
   -- only hits with user_pseudo_id and session_id
   and user_pseudo_id is not null
   and session_id is not null
   group by
+    property_id,
     session_id,
     stream_id,
-    user_pseudo_id,
-    property_id
+    user_pseudo_id
     -- this should not lead to duplicates. If it does, we'll get rid of those in ga4_sessions anyway
 ),
 
@@ -159,10 +173,10 @@ add_meta_info as (
       session_start_timestamp_utc,
       session_end_timestamp_utc,
       engagement_time_msec,
-      timestamp_diff(session_end_timestamp_utc, session_start_timestamp_utc, second) as session_duration_s
-    ) as time,
+      timestamp_diff(session_end_timestamp_utc, session_start_timestamp_utc, second) as session_duration_sec
+    ) as time
 
-    cross_channel_campaign.*
+    -- cross_channel_campaign.*
   from events
 )
 
