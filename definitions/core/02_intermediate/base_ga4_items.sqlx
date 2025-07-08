@@ -57,6 +57,7 @@ with query_source as (
       _table_suffix as table_suffix,
       *
     from ${ref("events_fresh_*")}
+
     where true
 
     -- incrementality clause

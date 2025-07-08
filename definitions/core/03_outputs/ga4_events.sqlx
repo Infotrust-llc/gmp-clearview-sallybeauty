@@ -20,7 +20,7 @@
 
 config {
   type: "incremental",
-  tags: [dataform.projectConfig.vars.GA4_DATASET,"events","outputs"],
+  tags: [dataform.projectConfig.vars.GA4_DATASET,"events","dev"],
   schema: dataform.projectConfig.vars.OUTPUTS_DATASET,
   description: "Output events table: unnested, cleaned, clustered data with several fixes",
   bigquery: {

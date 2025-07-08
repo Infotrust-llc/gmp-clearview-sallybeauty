@@ -17,8 +17,6 @@ config {
   }
 }
 
-
-
 js {
   const { helpers } = require("includes/core/helpers");
   const config = helpers.getConfig();
@@ -28,7 +26,6 @@ js {
   const base_tbl = self();
 
 }
-
 
 /* incrementality */
 pre_operations {
@@ -57,6 +54,7 @@ with query_source as (
       _table_suffix as table_suffix,
       *
     from ${ref("events_fresh_*")}
+
     where true
 
     -- incrementality clause
@@ -85,7 +83,6 @@ with query_source as (
 step1 as (
 
   select
-    '${dataform.projectConfig.vars.GA4_DATASET}' as property_id,
     -- first chunk: the basics
     event_timestamp,
     event_name,
@@ -564,6 +561,7 @@ fixed as (
 
 add_meta_info as (
   select
+      '${dataform.projectConfig.vars.GA4_DATASET}' as property_id,
       -- make session_id - can be NULL (if anonymous ping or MP hit without session_id)
     -- farm_fingerprint(
     --   user_pseudo_id || event_params.ga_session_id
