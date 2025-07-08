@@ -8,7 +8,7 @@
 
 config {
     type: "view",
-    tags: ["wam","prod"],
+    tags: ["wam","reporting"],
     // materialized: true,
     schema: "gmp_reporting"
 }

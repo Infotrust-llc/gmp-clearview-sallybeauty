@@ -8,7 +8,7 @@
 
 config {
     type: "incremental",
-    tags: ["landing page","prod"],
+    tags: ["landing page","reporting"],
     //materialized: true,
     schema: "gmp_reporting"
 }
