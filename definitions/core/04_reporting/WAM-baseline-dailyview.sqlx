@@ -1,0 +1,27 @@
+
+  /*
+  This file is part of "GMP Clearview" package.
+  Copyright (C)  2025 Infotrust 
+  Alina Zilbergerts, Trish Dothkar,
+  -- */
+
+
+config {
+    type: "view",
+    tags: ["wam","prod"],
+    // materialized: true,
+    schema: "gmp_reporting"
+}
+
+SELECT
+  DATE(TIMESTAMP_MICROS(event_timestamp)) AS event_date, 
+  count(distinct session_id) sessions,
+        count(distinct if(event_params.session_engaged = 1, session_id, NULL)) engaged_sessions,
+        count(distinct user_pseudo_id) users,
+  sum(`ecommerce`.`purchase_revenue_in_usd`) as revenue,
+  count(`ecommerce`.`transaction_id`) as orders,
+  sum(`ecommerce`.`total_item_quantity`) as units
+ 
+FROM  ${ref("base_ga4_events")}
+  group by 1
+  order by 1

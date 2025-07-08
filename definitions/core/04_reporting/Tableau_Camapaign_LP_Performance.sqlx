@@ -1,0 +1,55 @@
+
+  /*
+  This file is part of "GMP Clearview" package.
+  Copyright (C)  2025 Infotrust 
+  Alina Zilbergerts, Trish Dothkar,
+  -- */
+
+
+config {
+    type: "incremental",
+    tags: ["landing page","prod"],
+    //materialized: true,
+    schema: "gmp_reporting"
+}
+js {
+    const { helpers } = require("includes/core/helpers");
+    const config = helpers.getConfig();
+}
+/* incrementality */
+pre_operations {
+  declare date_checkpoint DATE;
+--   set @@query_label = "${helpers.executionLabels()}";
+  set date_checkpoint = (
+    ${when(incremental(),
+      `select
+        coalesce(max(session_date)+1, date('${config.GA4_START_DATE}'))
+      from ${self()}
+      where is_final = true`,
+    `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
+  );
+    -- delete some older data, since this may be updated later by GA4
+  ${
+    when(incremental(),
+      `delete from ${self()} where session_date >= date_checkpoint`
+      )
+  }
+}
+ SELECT
+  session_date AS event_date,
+  cross_channel_campaign.primary_channel_group AS session_channel_grouping,
+  cross_channel_campaign.campaign_name AS session_campaign_name,
+  cross_channel_campaign.source AS session_source,
+  cross_channel_campaign.medium AS session_medium,
+  user_type,
+  landing_page.landing_page_path AS landing_page,
+  COUNT(DISTINCT session_id) AS total_sessions,
+  COUNT(DISTINCT IF(is_engaged_session, session_id, NULL)) AS engaged_sessions,
+  COUNT(DISTINCT user_pseudo_id) AS total_users, 
+  SUM(purchase_revenue) AS total_revenue, 
+  SUM(transactions) AS total_transactions
+FROM ${ref("ga4_sessions")} 
+WHERE  session_date >= date_checkpoint
+GROUP BY all
+   
+

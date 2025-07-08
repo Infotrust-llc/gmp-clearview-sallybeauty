@@ -1,0 +1,29 @@
+
+  /*
+  This file is part of "GMP Clearview" package.
+  Copyright (C)  2025 Infotrust 
+  Alina Zilbergerts, Trish Dothkar,
+  -- */
+
+
+config {
+    type: "view",
+    tags: ["wam","prod"],
+    // materialized: true,
+    schema: "gmp_reporting"
+}
+
+SELECT 'open funnel' funnel_type,session_date,
+  count(distinct session_id) sessions,
+  count(distinct if(is_engaged_session, session_id, NULL)) engaged_sessions,
+  COUNT(DISTINCT if(time.engagement_time_msec > 0, user_pseudo_id, NULL)) as active_users,
+  COUNT(DISTINCT IF(view_item>0 , session_id, NULL)) view_items,
+  SUM(view_item) view_item_sessions,
+  SUM(add_to_cart) add_to_cart,
+  SUM(view_cart) view_cart,
+  SUM(begin_checkout) begin_checkout,
+  SUM(purchase) purchase
+  FROM ${ref("ga4_sessions")} 
+
+  
+ group by all

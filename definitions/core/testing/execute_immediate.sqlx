@@ -1,0 +1,15 @@
+config {
+    type: "table",
+    schema: "gmp_base",
+   
+
+}
+
+CALL `sallybeauty-us-ga4`.gmp_base.my_dynamic_procedure("analytics_320983557.events_*", '20250505' )
+-- select * from ${ref("events_*")}
+
+-- EXECUTE IMMEDIATE 
+--  FORMAT("""
+-- SELECT DISTINCT event_date, user_pseudo_id 
+-- from %s WHERE _TABLE_SUFFIX = '%s'
+-- """, "${ref("events_*")}", '20250505' )

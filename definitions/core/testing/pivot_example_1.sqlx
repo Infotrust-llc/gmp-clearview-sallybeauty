@@ -1,0 +1,51 @@
+config {
+  type: "operations",
+   schema: "gmp_base",
+   dependencies: ["pivot_columns"]
+
+}
+-- pre_operations {
+
+--   DECLARE json_data  DEFAULT 
+--    (SELECT STRING_AGG(TO_JSON_STRING(a, true)) as json_data FROM sallybeauty-us-ga4.gmp_base.event_params a);
+
+--    DECLARE source_sql DEFAULT (select * from ${ref("pivot_columns")})
+-- }
+js {
+  const { helpers } = require("includes/core/helpers");
+  const config = helpers.getConfig();
+    const json_custom_params = 'SELECT CONCAT("[", STRING_AGG(json_data, ","), "]") \
+FROM (SELECT TO_JSON_STRING(JSON_OBJECT("name", name, "type", type)) AS json_data \
+      FROM sallybeauty-us-ga4.gmp_base.event_params GROUP BY name, type)';
+
+      config.CUSTOM_EVENT_PARAMS_ARRAY= [{"type": "string","name": "method"}];
+      const json_params = "(SELECT STRING_AGG(TO_JSON_STRING(a, true)) as json_data FROM sallybeauty-us-ga4.gmp_base.event_params a)";
+    
+}
+-- select * from ${ref("pivot_columns")}
+
+-- DECLARE json_data  DEFAULT 
+--    (SELECT STRING_AGG(TO_JSON_STRING(a, true)) as json_data FROM sallybeauty-us-ga4.gmp_base.event_params a);
+--    CREATE OR REPLACE TEMP TABLE ${sl}
+-- select json_data;
+-- ${json_custom_params}
+
+--  ${json_params}
+declare pivot_columns1 string default (select json_data from ${ref('pivot_columns')});
+
+-- select * from ${pi vot_columns1};
+EXECUTE IMMEDIATE format("p", pivot_columns1);
+
+-- declare sql string default "select pivot_columns1"; --${helpers.generateParamsSQL_fake(" ||   pivot_columns1  || ")}";
+--  EXECUTE IMMEDIATE sql;
+-- EXECUTE IMMEDIATE FORMAT("""
+-- select
+--    ${helpers.generateParamsSQL_fake(`select * from ${ref('pivot_columns')`}}
+-- """,   ${json_params})
+
+    -- and the custom ones
+-- ${
+    -- `${helpjson_custom_paramsers.generateStructSQL(helpers.generateParamsSQL(source_sql ))} as event_params_custom,`
+  -- } 
+
+  -- from ${ref("events_fresh_*")}

@@ -1,0 +1,25 @@
+
+  /*
+  This file is part of "GMP Clearview" package.
+  Copyright (C)  2025 Infotrust 
+  Alina Zilbergerts, Trish Dothkar,
+  -- */
+
+
+config {
+    type: "view",
+    tags: ["wam","prod"],
+    // materialized: true,
+    schema: "gmp_reporting"
+}
+
+ -- WAM-channel_dailyview - BASE SESSIONS table
+
+SELECT 'WTD' as period,cross_channel_campaign.primary_channel_group,session_date, 
+        count(distinct session_id) sessions,
+        count(distinct if(is_engaged_session, session_id, NULL)) engaged_sessions,
+        count(distinct user_pseudo_id) users,
+        sum(purchase_revenue) revenue,
+        sum(transactions) transactions,
+  FROM ${ref("ga4_sessions")}
+ group by primary_channel_group, session_date

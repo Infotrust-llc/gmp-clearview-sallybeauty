@@ -69,15 +69,41 @@ const customConfig = {
   //    { name: "event_value", type: "decimal" },
   //    { name: "event_value", type: "string", renameTo: "event_value_string" }
   // ],
-  CUSTOM_EVENT_PARAMS_ARRAY: [],
+  CUSTOM_EVENT_PARAMS_ARRAY: [
+  // example set: this will populate 5 fields in the `event_params_custom` column in the `ga4_events` table
+  // known limitation: the output column names must be valid. use letters and underscores to be safe 
+    {  type: "string",  name: "application_status" },
+    {  type: "string",  name: "monetate_id" },
+    {  type: "string",  name: "order_discount" },
+    {  type: "string",  name: "personalization_value" },
+    {  type: "string",  name: "fullfillment_method" },
+    {  type: "string",  name: "monetate_status" },
+    {  type: "string",  name: "coupon" },
+    {  type: "string",  name: "page_type" },
+    {  type: "string",  name: "checkout_type" },
+    {  type: "string",  name: "communication_type" },
+    {  type: "string",  name: "group_type" },
+    {  type: "string",  name: "interaction_type" },
+    {  type: "string",  name: "search_type" },
+    {  type: "string",  name: "video_current_type" },
+    {  type: "string",  name: "nav_type" },
+    {  type: "string",  name: "payment_type" }
+],
 
   // user properties
   // example:
   // CUSTOM_USER_PROPERTIES_ARRAY: [
   //    { name: "lifetime_value",   type: "decimal" }
   // ],
-  CUSTOM_USER_PROPERTIES_ARRAY: [],
-
+CUSTOM_USER_PROPERTIES_ARRAY: [
+    {  type: "string",  name: "customer_id" },   
+    {  type: "string", name: "login_status" },
+    {  type: "string",  name: "email_subscriber" },
+    {  type: "string",  name: "text_subscriber" },
+    {  type: "string",  name: "remember_me_selected" },
+    {  type: "string",  name: "join_rewards" },
+    {  type: "string",  name: "reward_card_type" }
+],
 
  CUSTOM_ITEM_PARAMS_TO_EXCLUDE: [], // by default,  all custom arams are unnested except thse listed here
   // item custom dimensions and metrics
@@ -86,7 +112,22 @@ const customConfig = {
   // CUSTOM_ITEM_PARAMS_ARRAY: [
   //    { name: "stock_status", type: "string" }
   // ]
-  CUSTOM_ITEM_PARAMS_ARRAY: [],
+  CUSTOM_ITEM_PARAMS_ARRAY: [
+    {  type: "string",  name: "item_badge_name" },   
+    {  type: "string", name: "item_color" },
+    {  type: "string",  name: "item_coupon" },
+    {  type: "string",  name: "item_free_from" },
+    {  type: "string",  name: "item_free_gift" },
+    {  type: "string",  name: "item_fulfillment_method" },
+    {  type: "string",  name: "item_hair_color_type" },
+    {  type: "string",  name: "item_in_wishlist" },
+    {  type: "string",  name: "item_possible_fulfillment_method" },
+    {  type: "string",  name: "item_protection_plan" },
+    {  type: "string",  name: "item_review_quantity" },
+    {  type: "string",  name: "item_review_score" },
+    {  type: "string",  name: "item_sub_brand" },
+    {  type: "string",  name: "item_variant_name" }
+  ],
 
   // URL parameters to extract to own column
   // (note: all standard utm params are already extracted to `url_params`)
@@ -111,7 +152,7 @@ const customConfig = {
 
 
 // Key events to include as metrics. up to 5
-  KEY_EVENTS_ARRAY: ["select_content","GMP_form_send","form_submit","form_send","file_download","Contact_InfoTrust_form_send"],
+  KEY_EVENTS_ARRAY: ["view_item","add_to_cart","view_cart","begin_checkout","purchase","login","vsu_complete"],
 
 
   // Set this to true to enable "Organic AI" (and possible other future channels that

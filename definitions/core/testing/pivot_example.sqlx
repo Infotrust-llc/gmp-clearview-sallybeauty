@@ -1,0 +1,52 @@
+config {
+  type: "operations",
+  // hasOutput: true, // Necessary for dependency graphs.,
+  schema: "gmp_base"
+}
+
+/*
+  PARAMETERS TO CUSTOMIZE:
+  - source_schema: The schema of your source table.
+  - source_table: The table you're pivoting.
+  - dynamic_column: The column to pivot on.
+  - dimension_1, dimension_2: Columns you want to group by.
+  - pivot_metric: The metric column you're aggregating.
+  - aggregation_function: The aggregation function (e.g., AVG, SUM).
+  - order_by_column: The column to order your results by.
+*/
+
+DECLARE pivot_columns STRING ;  
+
+-- Dynamic SQL for pivoting
+DECLARE dynamic_sql STRING;
+
+-- Generate the dynamic pivot columns
+SET pivot_columns = (
+  SELECT 
+    STRING_AGG(DISTINCT FORMAT('"%s"', type), ', ')
+  FROM `sallybeauty-us-ga4.gmp_base.event_params`
+);
+
+ select  pivot_columns
+-- SET dynamic_sql = FORMAT("""
+--   -- CREATE OR REPLACE TABLE ${self()} AS (
+--     SELECT * FROM (
+--     SELECT 
+--       name,
+--       type 
+--     FROM `sallybeauty-us-ga4.gmp_base.event_params`
+--   ) PIVOT (
+--     %s(name) AS pivot_metric
+--     FOR type IN (%s)
+--   ) --ORDER BY %s ASC
+--   -- )
+-- """, 
+--   "COUNT", -- Placeholder for the aggregation function, replace as needed
+--   pivot_columns,
+--   "type" -- Placeholder for ordering, replace with dimension_1, dimension_2 as required
+-- );
+
+
+-- select dynamic_sql;
+-- -- Execute the dynamic SQL
+-- -- EXECUTE IMMEDIATE dynamic_sql;

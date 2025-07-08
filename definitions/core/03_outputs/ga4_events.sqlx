@@ -67,11 +67,11 @@ with query_source as (
     select
       _table_suffix as table_suffix,
       *
-    from ${ref( 'events' || dataform.projectConfig.vars.TABLE_SUFFIX || "_*")}
+    from ${ref("events_fresh_*")}
     where true
 
     -- incrementality clause
-    and parse_date('%Y%m%d', regexp_extract(event_date,'[0-9]+')) >= '2025-05-01' -- have to use event_date instead of _table_suffix if we referer to events_2025* tables
+    and parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) >= '2025-05-01' -- have to use event_date instead of _table_suffix if we referer to events_2025* tables
 
     -- filters go here
 

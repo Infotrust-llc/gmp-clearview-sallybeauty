@@ -6,16 +6,18 @@
 
 config {
   type: "incremental",
-  tags: [dataform.projectConfig.vars.GA4_DATASET,"base_events","prod"],
+  tags: [dataform.projectConfig.vars.GA4_DATASET,"base_events","dev"],
   description: "Output events table: unnested, cleaned, clustered data with several fixes",
   database: dataform.projectConfig.vars.OUTPUT_PROJECT,
   schema: dataform.projectConfig.vars.TRANSFORMATIONS_DATASET,
-  name: "base_ga4_events",
+  name: "base_ga4_events_all",
   bigquery: {
     partitionBy: "event_date",
     clusterBy: ["event_name", "session_id"]
   }
 }
+
+
 
 js {
   const { helpers } = require("includes/core/helpers");
@@ -26,6 +28,7 @@ js {
   const base_tbl = self();
 
 }
+
 
 /* incrementality */
 pre_operations {
@@ -54,12 +57,11 @@ with query_source as (
       _table_suffix as table_suffix,
       *
     from ${ref("events_fresh_*")}
-
     where true
 
     -- incrementality clause
-    -- and parse_date('%Y%m%d', regexp_extract(event_date,'[0-9]+')) >= date_checkpoint -- have to use event_date instead of _table_suffix if we referer to events_2025* tables
-    and parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) >= date_checkpoint
+    and parse_date('%Y%m%d', regexp_extract(event_date,'[0-9]+')) >= date_checkpoint -- have to use event_date instead of _table_suffix if we referer to events_2025* tables
+    -- and _table_suffix >= '0605'
     -- filters go here
 
     -- intraday filter: exclude
@@ -83,6 +85,7 @@ with query_source as (
 step1 as (
 
   select
+    '${dataform.projectConfig.vars.GA4_DATASET}' as property_id,
     -- first chunk: the basics
     event_timestamp,
     event_name,
@@ -332,7 +335,7 @@ step1 as (
       config.CUSTOM_EVENT_PARAMS_ARRAY.length > 0,
         `${helpers.generateStructSQL(helpers.generateParamsSQL(config.CUSTOM_EVENT_PARAMS_ARRAY))} as event_params_custom,`
       )} 
-
+  
     -- add user_properties
     ${when(
       config.CUSTOM_USER_PROPERTIES_ARRAY.length > 0,      
@@ -561,7 +564,6 @@ fixed as (
 
 add_meta_info as (
   select
-      '${dataform.projectConfig.vars.GA4_DATASET}' as property_id,
       -- make session_id - can be NULL (if anonymous ping or MP hit without session_id)
     -- farm_fingerprint(
     --   user_pseudo_id || event_params.ga_session_id
