@@ -1,0 +1,28 @@
+config {
+  type: "operations",
+  hasOutput: true, // Necessary for dependency graphs.,
+  schema: "gmp_base"
+}
+
+-- 1) quoted comma-separated list ocustom event params for PIVOT approach
+-- DECLARE pivot_columns STRING DEFAULT "";
+
+-- -- Generate the dynamic pivot columns
+-- SET pivot_columns = (
+--   SELECT 
+--     CONCAT("[", STRING_AGG(DISTINCT FORMAT('"%s"', type), ', '), "]")
+--   FROM `sallybeauty-us-ga4.gmp_base.event_params`
+-- );
+
+-- CREATE OR REPLACE TEMP TABLE ${self()} as 
+-- select pivot_columns
+
+-- 2) JSON array of custom event parameter with their types, retrieve from previously created event_params table
+-- this will be passed into JS function to create dynamic SQL in base_ga4_events
+
+
+DECLARE json_data  DEFAULT 
+   (SELECT CONCAT("[", STRING_AGG(TO_JSON_STRING(a, true)), "]") as json_data FROM sallybeauty-us-ga4.gmp_base.event_params a);
+
+   CREATE OR REPLACE  TABLE ${self()} as 
+select json_data;

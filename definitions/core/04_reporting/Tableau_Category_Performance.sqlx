@@ -1,0 +1,60 @@
+
+  /*
+  This file is part of "GMP Clearview" package.
+  Copyright (C)  2025 Infotrust 
+  Alina Zilbergerts, Trish Dothkar,
+  -- */
+
+
+config {
+    type: "incremental",
+    tags: ["items","ecommerce", "prod"],
+    //materialized: true,
+    schema: "gmp_reporting"
+}
+js {
+    const { helpers } = require("includes/core/helpers");
+    const config = helpers.getConfig();
+}
+/* incrementality */
+pre_operations {
+  declare date_checkpoint DATE;
+--   set @@query_label = "${helpers.executionLabels()}";
+  set date_checkpoint = (
+    ${when(incremental(),
+      `select
+        coalesce(max(session_date)+1, date('${config.GA4_START_DATE}'))
+      from ${self()}
+      where is_final = true`,
+    `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
+  );
+    -- delete some older data, since this may be updated later by GA4
+  ${
+    when(incremental(),
+      `delete from ${self()} where event_date >= date_checkpoint`
+      )
+  }
+}
+   SELECT distinct
+   event_date,
+   DATE(TIMESTAMP_MICROS(event_timestamp)) AS event_date_utc,
+   lower(item_brand) as item_brand,
+    lower( item_name) as item_name,
+    lower(item_category) as item_category,
+    lower(item_category2) as item_category2 ,
+    lower(item_category3) as item_category3,
+  
+    COUNTIF(event_name = 'select_item') AS list_clicks,
+    COUNTIF(event_name = 'view_item') AS viewed_item,
+    COUNTIF(event_name = 'add_to_cart' ) AS unique_add_to_cart,
+    SUM(CASE WHEN event_name = 'add_to_cart' THEN quantity ELSE 0 END) AS total_quantity_add_to_cart,
+    SUM(CASE WHEN event_name = 'begin_checkout' THEN quantity ELSE 0 END) AS total_quantity_checked_out,
+    SUM(CASE WHEN event_name = 'purchase' THEN quantity ELSE 0 END) AS item_quantity_purchased, 
+    COUNTIF(event_name = 'purchase' ) AS unique_purchases, 
+    SUM(CASE WHEN event_name = 'purchase' THEN item_revenue ELSE 0 END) AS revenue,
+    
+FROM ${ref("base_ga4_items")} 
+Where event_date>= date_checkpoint
+GROUP BY all
+   
+

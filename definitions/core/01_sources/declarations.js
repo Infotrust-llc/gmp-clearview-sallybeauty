@@ -34,6 +34,7 @@ declare({
     tags: ["prod"],
     name: 'events_fresh_*'
 });
+
 // declare({
 //     database: dataform.projectConfig.defaultProject,
 //     schema: dataform.projectConfig.vars.GA4_DATASET,
