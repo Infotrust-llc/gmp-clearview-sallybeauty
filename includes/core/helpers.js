@@ -18,6 +18,7 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+
 /**
  * Returns the merged core and custom configuration objects.
  * @returns {Object} Merged configuration object
@@ -114,8 +115,13 @@ const generateParamSQL = (config, column = "event_params") => {
  * @param {string} [column='event_params'] - Column name containing the parameters
  * @returns {string} SQL fragment for multiple parameters unnest
  */
+const generateParamsSQL_fake  = (config_array, column = "event_params") => {
+  return 
+      `${config_array}`;
+
+  };
 const generateParamsSQL = (config_array, column = "event_params") => {
-  console.log(config_array);
+  console.log("alina");
   return `
       ${config_array
         .map((config) => {
@@ -713,7 +719,8 @@ const helpers = {
   storageUpdateLabels,
   generateAlterTableStatements,
   getSqlSelectEventsAsMetrics,
-  getSqlPivotEventParams
+  getSqlPivotEventParams,
+  generateParamsSQL_fake
 };
 
 module.exports = {
