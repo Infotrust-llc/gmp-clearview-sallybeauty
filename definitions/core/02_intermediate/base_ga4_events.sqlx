@@ -596,6 +596,9 @@ add_meta_info as (
        regexp_extract(event_params.page_location, r'^(?:(?:[^:\/?#]+):)?(?:\/\/(?:[^\/?#]*))?([^?#]*)(?:\?(?:[^#]*))?(?:#(?:.*))?') as path,
        event_params.page_referrer as referrer,
        event_params.page_title as title
+      --  event_params.content_type as content_type,
+      --  event_params.content_id as content_id,
+      --  event_params.content_group as content_group
       ) as page,
 
     -- is this a hit with source? Or: not direct/none or when we have a source or medium
