@@ -277,52 +277,6 @@ step1 as (
     ) as first_user_traffic_source,
 
 
-    -- repack the items array struct
-    -- AZ Items will move to base_ga4_items table
-    -- array(
-    --   (
-    --     select
-    --       struct(
-    --         items.item_id,
-    --         items.item_name,
-    --         items.item_brand,
-    --         items.item_variant,
-    --         items.item_category,
-    --         items.item_category2,
-    --         items.item_category3,
-    --         items.item_category4,
-    --         items.item_category5,
-    --         items.price_in_usd,
-    --         items.price,
-    --         items.quantity,
-    --         items.item_revenue_in_usd,
-    --         items.item_revenue,
-    --         items.item_refund_in_usd,
-    --         items.item_refund,
-    --         items.coupon,
-    --         items.affiliation,
-    --         items.location_id,
-    --         items.item_list_id,
-    --         items.item_list_name,
-    --         items.item_list_index,
-    --         items.promotion_id,
-    --         items.promotion_name,
-    --         items.creative_name,
-    --         items.creative_slot
-    --         ${when(config.CUSTOM_ITEM_PARAMS_ARRAY.length > 0,
-    --             `, ${helpers.generateStructSQL(
-    --             helpers.generateParamsSQL(
-    --                 config.CUSTOM_ITEM_PARAMS_ARRAY, 
-    --                 "items.item_params"
-    --             )
-    --         )
-    --         } as item_params_custom`)}
-    --       )
-    --     from unnest(items) as items
-    --   )
-    -- ) as items,
-
-
     -- the programatically added SQL:
     -- grab all core event parameters
     ${helpers.generateStructSQL(helpers.generateParamsSQL(config.CORE_PARAMS_ARRAY))} as event_params,
@@ -339,6 +293,8 @@ step1 as (
         `${helpers.generateStructSQL(helpers.generateParamsSQL(config.CUSTOM_USER_PROPERTIES_ARRAY,'user_properties'))} as user_properties,`
       )}
 
+        -- recast
+    ${helpers.generateParamSQL(   {type: "int",  name: "session_engaged" })}
 
   from query_source
 
@@ -644,7 +600,12 @@ add_row_numbers as (
           order by batch.batch_page_id asc
         ),
         null
-     ) as page_number
+     ) as page_number,
+
+      if( MAX(session_engaged) OVER 
+        (PARTITION BY event_date, session_id )  = 1, session_id, NULL) 
+      as engaged_session_id 
+      
     ) as session_info
 
   from deduped
