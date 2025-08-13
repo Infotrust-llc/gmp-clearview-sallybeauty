@@ -1,0 +1,8 @@
+
+
+    bq mk --connection \
+  --location = dataform.projectConfig.defaultLocation  \
+  --project_id = dataform.projectConfig.defaultProject \
+  --display_name="Remote GA4 API Connection" \
+  --connection_type=CLOUD_RESOURCE ga4-remote-connection
+

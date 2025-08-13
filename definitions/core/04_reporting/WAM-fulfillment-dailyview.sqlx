@@ -19,7 +19,7 @@ SELECT
   count(ecommerce.transaction_id) as orders,
 
 FROM ${ref("base_ga4_events")}
-  where event_name='purchase'  
+where event_name='purchase'  
 
-  group by 1,2
-  order by 1,2
+group by 1,2
+order by 1,2

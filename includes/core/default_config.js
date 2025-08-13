@@ -580,7 +580,7 @@ const CORE_PARAMS_ARRAY = [
 const EXTRA_CHANNEL_GROUPS = false;
 
 // this date will be the first shard that is processed
-const GA4_START_DATE = "2025-05-01";
+const GA4_START_DATE = "2025-07-01";
 
 // how many days should pass in order to deem an event 'final'
 // we recommend using 3 as Measurement Protocol hits can arrive 72 hours into the past
@@ -597,7 +597,10 @@ const ASSERTIONS_SESSIONS_VALIDITY = true;
 const ASSERTIONS_TABLES_TIMELINESS = true; 
 const ASSERTIONS_TRANSACTION_ID_COMPLETENESS = true;
 const ASSERTIONS_USER_PSEUDO_ID_COMPLETENESS = true;
+const ASSERTIONS_API_DATA_CHECK = true;
 
+// Allowed/expected deviation from GA4 data in UI
+const DEVIATION_THRESHOLD_PERCENT =  10; 
 
 // deduplicate transactions?
 const TRANSACTIONS_DEDUPE = false;
@@ -704,7 +707,9 @@ const coreConfig = {
     CUSTOM_URL_PARAMS_ARRAY,
     TRANSACTIONS_DEDUPE,
     TRANSACTION_TOTALS_UID,
-    TABLES_OUTPUT
+    TABLES_OUTPUT,
+    ASSERTIONS_API_DATA_CHECK,
+    DEVIATION_THRESHOLD_PERCENT
 }
 
 module.exports = {

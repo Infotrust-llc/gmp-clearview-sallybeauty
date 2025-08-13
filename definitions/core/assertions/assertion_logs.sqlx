@@ -3,7 +3,9 @@
 config {
     type: "operations",
     schema: dataform.projectConfig.vars.QUALITY_DATASET,
+    tags: ["prod", "assertions"],
     hasOutput: true // optional, lets you reference the empty table
+
 }
 
 BEGIN
@@ -24,6 +26,7 @@ BEGIN
       %s (
         inserted_at TIMESTAMP,
         assertion STRING,
+        assertion_for_date STRING,
         model STRING,
         expectations INT64,
         count INT64,

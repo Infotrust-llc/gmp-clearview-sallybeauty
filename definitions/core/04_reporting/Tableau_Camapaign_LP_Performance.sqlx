@@ -8,7 +8,7 @@
 
 config {
     type: "incremental",
-    tags: ["landing page","reporting"],
+    tags: ["landing page","reporting", "prod"],
     //materialized: true,
     schema: "gmp_reporting"
 }
@@ -23,15 +23,14 @@ pre_operations {
   set date_checkpoint = (
     ${when(incremental(),
       `select
-        coalesce(max(session_date)+1, date('${config.GA4_START_DATE}'))
-      from ${self()}
-      where is_final = true`,
+        coalesce(max(event_date)+1, date('${config.GA4_START_DATE}'))
+      from ${self()} `,
     `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
   );
     -- delete some older data, since this may be updated later by GA4
   ${
     when(incremental(),
-      `delete from ${self()} where session_date >= date_checkpoint`
+      `delete from ${self()} where event_date >= date_checkpoint`
       )
   }
 }

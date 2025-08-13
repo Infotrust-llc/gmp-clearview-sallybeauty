@@ -16,7 +16,7 @@ config {
 js {
     const { helpers } = require("includes/core/helpers");
     const config = helpers.getConfig();
-    const fieldnames_sql = helpers.getEventParamKeysArray(config, ref("events_fresh_*"), "event_params");
+    const fieldnames_sql = helpers.getEventParamKeysArray(config, ref("events_*"), "event_params");
     const base_tbl = self();
 }
 
@@ -30,6 +30,6 @@ CASE TRUE
         THEN "decimal"
   ELSE "string"
   END as type
-  FROM  ${ref("events_fresh_*")}, unnest(event_params) ep
+  FROM  ${ref("events_*")}, unnest(event_params) ep
   WHERE _TABLE_SUFFIX > format_date("%Y%m%d", DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY))
   group by all

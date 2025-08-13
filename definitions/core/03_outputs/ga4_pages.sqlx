@@ -67,7 +67,8 @@ SELECT
   ${helpers.generateArrayAggSQL('geo')},
   ${helpers.generateArrayAggSQL('app_info')},
   ${helpers.generateArrayAggSQL('platform')},
-  ${helpers.generateArrayAggSQL('session_traffic_source_last_click', 'session_traffic_source_last_click')},
+--   ${helpers.generateArrayAggSQL('session_traffic_source_last_click', 'session_traffic_source_last_click')},
+    ${helpers.generateArrayAggSQL('cross_channel_campaign', 'cross_channel_campaign')} ,
 
   CASE
     WHEN REGEXP_CONTAINS(page.path, r'\/da\/|\/de\/|\/en\/|\/es\/|\/fi\/|\/fr\/|\/it\/|\/nl\/|\/no\/|\/pt\/|\/sv\/') THEN RIGHT(REGEXP_REPLACE(regexp_replace(page.path, r'^https?://[^/]+', ''),r'[\?#].*',''), LENGTH(REGEXP_REPLACE(regexp_replace(page.path, r'^https?://[^/]+', ''),r'[\?#].*',''))-3)

@@ -5,6 +5,9 @@
   Alina Zilbergerts, Trish Dothkar,
   -- */
 
+  
+--add incrementality
+
 
 config {
     type: "view",
