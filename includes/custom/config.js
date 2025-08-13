@@ -41,7 +41,7 @@ const lowerSQL = helpers.lowerSQL;
 const customConfig = {
   // on a new or full build, this start date will be picked
 
-  GA4_START_DATE: "2025-05-01",
+  GA4_START_DATE: "2025-06-01",
 
   // custom definitions
   // a very complete list of all recommended and standard event parameters is
@@ -188,7 +188,9 @@ CUSTOM_USER_PROPERTIES_ARRAY: [
   // check for a transaction IDs on a purchase?
   ASSERTIONS_TRANSACTION_ID_COMPLETENESS: false,
   // check for cookies on all hits? (note: cookieless pings will trigger a fail)
-  ASSERTIONS_USER_PSEUDO_ID_COMPLETENESS: false
+  ASSERTIONS_USER_PSEUDO_ID_COMPLETENESS: false,
+  // check aginst data that we pull for API directly fro GA4 UI
+  ASSERTIONS_API_DATA_CHECK: true
 
 }
 
