@@ -8,14 +8,16 @@
 
 config {
     type: "view",
-    tags: ["wam","reporting"],
-    // materialized: true,
-    schema: "gmp_reporting"
+    tags: ["wam","reporting", "prod","view"],
+    // materialized: true,    -- cannot materialized due to COUNT DISTINCT
+    database: dataform.projectConfig.vars.OUTPUT_PROJECT,
+    schema: dataform.projectConfig.vars.REPORTING_DATASET,
 }
 
  -- WAM-channel_dailyview - BASE SESSIONS table
 
-SELECT 'WTD' as period,cross_channel_campaign.primary_channel_group channel_group,
+SELECT 'WTD' as period,
+        cross_channel_campaign.primary_channel_group channel_group,
         count(distinct session_id) sessions,
         count(distinct if(is_engaged_session, session_id, NULL)) engaged_sessions,
         count(distinct user_pseudo_id) users,
@@ -27,8 +29,9 @@ SELECT 'WTD' as period,cross_channel_campaign.primary_channel_group channel_grou
         group by channel_group
 
 UNION ALL
-SELECT
-'MTD' as period, cross_channel_campaign.primary_channel_group channel_group,
+
+SELECT 'MTD' as period, 
+    cross_channel_campaign.primary_channel_group channel_group,
     COUNT(DISTINCT session_id) AS sessions,
     count(distinct if(is_engaged_session, session_id, NULL)) engaged_sessions,
     COUNT(DISTINCT user_pseudo_id) AS users,
@@ -39,9 +42,11 @@ SELECT
   where session_date >= DATE_TRUNC(DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY), MONTH) 
     AND session_date <= DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY)
         group by channel_group
-  UNION ALL
-SELECT
-'QTD' as period, cross_channel_campaign.primary_channel_group channel_group,
+
+UNION ALL
+
+SELECT 'QTD' as period, 
+    cross_channel_campaign.primary_channel_group channel_group,
     COUNT(DISTINCT session_id) AS sessions,
     count(distinct if(is_engaged_session, session_id, NULL)) engaged_sessions,
     COUNT(DISTINCT user_pseudo_id) AS users,
@@ -56,12 +61,13 @@ SELECT
                 WHEN EXTRACT(MONTH FROM  DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY)) BETWEEN 4 AND 6 THEN DATE(EXTRACT(YEAR FROM  DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY)), 4, 1)
                 WHEN EXTRACT(MONTH FROM  DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY)) BETWEEN 7 AND 9 THEN DATE(EXTRACT(YEAR FROM  DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY)), 7, 1)
             END
-        AND session_date <= DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY)
-        group by channel_group
+  AND session_date <= DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY)
+  group by channel_group
 
 UNION ALL
-SELECT
-'YTD' as period,cross_channel_campaign.primary_channel_group channel_group,
+
+SELECT 'YTD' as period,
+    cross_channel_campaign.primary_channel_group channel_group,
     COUNT(DISTINCT session_id) AS sessions,
     count(distinct if(is_engaged_session, session_id, NULL)) engaged_sessions,
     COUNT(DISTINCT user_pseudo_id) AS users,
@@ -71,4 +77,4 @@ SELECT
   from ${ref("ga4_sessions")}
   where session_date >= DATE_TRUNC(DATE(EXTRACT(YEAR FROM CURRENT_DATE()) - IF(EXTRACT(MONTH FROM CURRENT_DATE()) < 10, 1, 0), 10, 1), MONTH)
         AND session_date <= DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY) 
-        group by channel_group
+      group by channel_group
