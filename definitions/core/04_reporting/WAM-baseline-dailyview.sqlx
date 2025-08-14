@@ -11,8 +11,8 @@ config {
     database: dataform.projectConfig.vars.OUTPUT_PROJECT,
     schema: dataform.projectConfig.vars.REPORTING_DATASET,
     bigquery: {
-      partitionBy: "date",
-     labels: require("includes/core/helpers.js").helpers.storageLabels()
+      partitionBy: "date"
+     // labels: require("includes/core/helpers.js").helpers.storageLabels()
     }
 }
 
@@ -25,16 +25,16 @@ js {
 /* incrementality */
 pre_operations {
   declare date_checkpoint DATE;
-  set @@query_label = "${helpers.executionLabels()}";
+  -- set @@query_label = "${helpers.executionLabels()}";
   set date_checkpoint = (
     ${when(incremental(),
-      `select coalesce(max(event_date) - ${config.DATA_IS_FINAL_DAYS}, date('${config.GA4_START_DATE}')) from ${self()}`,
+      `select coalesce(max(date) - ${config.DATA_IS_FINAL_DAYS}, date('${config.GA4_START_DATE}')) from ${self()}`,
       `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
   );
     -- delete some older data, since this may be updated later by GA4
   ${
     when(incremental(),
-      `delete from ${self()} where event_date >= date_checkpoint`
+      `delete from ${self()} where date >= date_checkpoint`
       )
   }
 }

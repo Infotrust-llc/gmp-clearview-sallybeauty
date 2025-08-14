@@ -42,7 +42,7 @@ pre_operations {
 
 SELECT
   DATE(TIMESTAMP_MICROS(event_timestamp)) AS date, 
-  lower(event_params_custom.fullfillment_method) as order_fulfillment,
+  lower(event_params_custom.fulfillment_method) as order_fulfillment,
   sum(ecommerce.purchase_revenue_in_usd) as revenue,
   count(ecommerce.transaction_id) as orders,
 
