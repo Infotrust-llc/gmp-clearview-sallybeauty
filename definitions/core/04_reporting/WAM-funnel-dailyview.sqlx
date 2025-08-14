@@ -6,17 +6,40 @@
   -- */
 
   
---add incrementality
-
-
 config {
-    type: "view",
-    tags: ["wam","reporting"],
-    // materialized: true,
-    schema: "gmp_reporting"
+    type: "incremental",
+    tags: ["wam","reporting", "prod"],
+    database: dataform.projectConfig.vars.OUTPUT_PROJECT,
+    schema: dataform.projectConfig.vars.REPORTING_DATASET,
+    bigquery: {
+      partitionBy: "date"
+     // labels: require("includes/core/helpers.js").helpers.storageLabels()
+    }
 }
 
-SELECT 'open funnel' funnel_type,session_date,
+js {
+    const { helpers } = require("includes/core/helpers");
+    const config = helpers.getConfig();
+}
+
+/* incrementality */
+pre_operations {
+  declare date_checkpoint DATE;
+  -- set @@query_label = "${helpers.executionLabels()}";
+  set date_checkpoint = (
+    ${when(incremental(),
+      `select coalesce(max(date) - ${config.DATA_IS_FINAL_DAYS}, date('${config.GA4_START_DATE}')) from ${self()}`,
+      `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
+  );
+    -- delete some older data, since this may be updated later by GA4
+  ${
+    when(incremental(),
+      `delete from ${self()} where date >= date_checkpoint`
+      )
+  }
+}
+
+SELECT 'open funnel' funnel_type, session_date as date,
   count(distinct session_id) sessions,
   count(distinct if(is_engaged_session, session_id, NULL)) engaged_sessions,
   COUNT(DISTINCT if(time.engagement_time_msec > 0, user_pseudo_id, NULL)) as active_users,
@@ -27,6 +50,7 @@ SELECT 'open funnel' funnel_type,session_date,
   SUM(begin_checkout) begin_checkout,
   SUM(purchase) purchase
   FROM ${ref("ga4_sessions")} 
+  where session_date >= date_checkpoint
 
   
  group by all

@@ -5,18 +5,43 @@
   Alina Zilbergerts, Trish Dothkar,
   -- */
 
-  
--- Need to add incrementality
-
 config {
-    type: "view",
-    tags: ["wam","reporting"],
-    materialized: true,
-    schema: "gmp_reporting"
+    type: "incremental",
+    tags: ["wam","reporting", "prod"],
+    database: dataform.projectConfig.vars.OUTPUT_PROJECT,
+    schema: dataform.projectConfig.vars.REPORTING_DATASET,
+    bigquery: {
+      partitionBy: "date",
+     labels: require("includes/core/helpers.js").helpers.storageLabels()
+    }
 }
 
+
+js {
+    const { helpers } = require("includes/core/helpers");
+    const config = helpers.getConfig();
+}
+
+/* incrementality */
+pre_operations {
+  declare date_checkpoint DATE;
+  set @@query_label = "${helpers.executionLabels()}";
+  set date_checkpoint = (
+    ${when(incremental(),
+      `select coalesce(max(event_date) - ${config.DATA_IS_FINAL_DAYS}, date('${config.GA4_START_DATE}')) from ${self()}`,
+      `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
+  );
+    -- delete some older data, since this may be updated later by GA4
+  ${
+    when(incremental(),
+      `delete from ${self()} where event_date >= date_checkpoint`
+      )
+  }
+}
+
+
 SELECT
-  DATE(TIMESTAMP_MICROS(event_timestamp)) AS event_date, 
+  DATE(TIMESTAMP_MICROS(event_timestamp)) AS date, 
   count(distinct session_id) sessions,
   count(distinct session_info.engaged_session_id) engaged_sessions,
   count(distinct user_pseudo_id) users,
@@ -25,5 +50,6 @@ SELECT
   sum(`ecommerce`.`total_item_quantity`) as units
  
 FROM  ${ref("base_ga4_events")}
-group by 1
-order by 1
+WHERE event_date >= date_checkpoint
+group by date
+

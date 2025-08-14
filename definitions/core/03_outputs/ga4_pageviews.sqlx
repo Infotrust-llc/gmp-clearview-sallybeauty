@@ -1,6 +1,6 @@
 config {
     type: "incremental",
-    tags: [dataform.projectConfig.vars.GA4_DATASET, "pages", "prod"],
+    tags: [dataform.projectConfig.vars.GA4_DATASET, "pageviews", "prod"],
     database: dataform.projectConfig.vars.OUTPUT_PROJECT,
     schema: dataform.projectConfig.vars.TRANSFORMATIONS_DATASET,
     description: "Table containing all captured page views",

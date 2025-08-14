@@ -28,7 +28,7 @@ config {
   bigquery: {
     partitionBy: "session_date",
     clusterBy: [ "session_id" ],
-    // labels: require("includes/core/helpers.js").helpers.storageLabels()
+    labels: require("includes/core/helpers.js").helpers.storageLabels()
   },
 }
 
@@ -43,11 +43,9 @@ pre_operations {
 --   set @@query_label = "${helpers.executionLabels()}";
   set date_checkpoint = (
     ${when(incremental(),
-      `select
-        coalesce(max(session_date)+1, date('${config.GA4_START_DATE}'))
-      from ${self()}
-      where is_final = true`,
-    `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
+      `select coalesce(max(session_date)+1, date('${config.GA4_START_DATE}'))
+        from ${self()} where is_final = true`,
+      `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
   );
     -- delete some older data, since this may be updated later by GA4
   ${

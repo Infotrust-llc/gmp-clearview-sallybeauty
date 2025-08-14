@@ -7,19 +7,47 @@
 
 
 config {
-    type: "view",
-    tags: ["wam","reporting"],
-    // materialized: true,
-    schema: "gmp_reporting"
+    type: "incremental",
+    tags: ["wam","reporting", "prod"],
+    database: dataform.projectConfig.vars.OUTPUT_PROJECT,
+    schema: dataform.projectConfig.vars.REPORTING_DATASET,
+    bigquery: {
+      partitionBy: "date"
+     //labels: require("includes/core/helpers.js").helpers.storageLabels()
+    }
 }
+
+js {
+    const { helpers } = require("includes/core/helpers");
+    const config = helpers.getConfig();
+}
+
+/* incrementality */
+pre_operations {
+  declare date_checkpoint DATE;
+--   set @@query_label = "${helpers.executionLabels()}";
+  set date_checkpoint = (
+    ${when(incremental(),
+      `select coalesce(max(date) - ${config.DATA_IS_FINAL_DAYS}, date('${config.GA4_START_DATE}')) from ${self()}`,
+      `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
+  );
+    -- delete some older data, since this may be updated later by GA4
+  ${
+    when(incremental(),
+      `delete from ${self()} where date >= date_checkpoint`
+      )
+  }
+}
+
+
 SELECT
-  DATE(TIMESTAMP_MICROS(event_timestamp)) AS event_date, 
+  DATE(TIMESTAMP_MICROS(event_timestamp)) AS date, 
   lower(event_params_custom.fullfillment_method) as order_fulfillment,
   sum(ecommerce.purchase_revenue_in_usd) as revenue,
   count(ecommerce.transaction_id) as orders,
 
 FROM ${ref("base_ga4_events")}
-where event_name='purchase'  
+where event_date >= date_checkpoint 
+AND event_name='purchase'  
 
 group by 1,2
-order by 1,2

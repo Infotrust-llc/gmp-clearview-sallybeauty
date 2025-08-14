@@ -5,17 +5,41 @@
   Alina Zilbergerts, Trish Dothkar,
   -- */
 
-
 config {
-    type: "view",
-    tags: ["wam","reporting"],
-    // materialized: true,
-    schema: "gmp_reporting"
+    type: "incremental",
+    tags: ["wam","reporting", "prod"],
+    database: dataform.projectConfig.vars.OUTPUT_PROJECT,
+    schema: dataform.projectConfig.vars.REPORTING_DATASET,
+    bigquery: {
+      partitionBy: "date"
+     //labels: require("includes/core/helpers.js").helpers.storageLabels()
+    }
 }
 
- -- WAM-channel_dailyview - BASE SESSIONS table
+js {
+    const { helpers } = require("includes/core/helpers");
+    const config = helpers.getConfig();
+}
 
-SELECT 'WTD' as period,cross_channel_campaign.primary_channel_group,session_date, 
+/* incrementality */
+pre_operations {
+  declare date_checkpoint DATE;
+--   set @@query_label = "${helpers.executionLabels()}";
+  set date_checkpoint = (
+    ${when(incremental(),
+      `select coalesce(max(date) - ${config.DATA_IS_FINAL_DAYS}, date('${config.GA4_START_DATE}')) from ${self()}`,
+      `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
+  );
+    -- delete some older data, since this may be updated later by GA4
+  ${
+    when(incremental(),
+      `delete from ${self()} where date >= date_checkpoint`
+      )
+  }
+}
+
+SELECT session_date as date, 
+        cross_channel_campaign.primary_channel_group,
         count(distinct session_id) sessions,
         count(distinct if(is_engaged_session, session_id, NULL)) engaged_sessions,
         count(distinct user_pseudo_id) users,
@@ -23,3 +47,5 @@ SELECT 'WTD' as period,cross_channel_campaign.primary_channel_group,session_date
         sum(transactions) transactions,
   FROM ${ref("ga4_sessions")}
  group by primary_channel_group, session_date
+
+ 

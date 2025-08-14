@@ -3,7 +3,7 @@
 config {
     type: "operations",
     schema: dataform.projectConfig.vars.QUALITY_DATASET,
-    tags: ["prod", "assertions"],
+    tags: [ "assertions"],
     hasOutput: true // optional, lets you reference the empty table
 
 }

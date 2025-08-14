@@ -76,7 +76,7 @@ const customConfig = {
     {  type: "string",  name: "monetate_id" },
     {  type: "string",  name: "order_discount" },
     {  type: "string",  name: "personalization_value" },
-    {  type: "string",  name: "fullfillment_method" },
+    {  type: "string",  name: "fulfillment_method" },
     {  type: "string",  name: "monetate_status" },
     {  type: "string",  name: "coupon" },
     {  type: "string",  name: "page_type" },
