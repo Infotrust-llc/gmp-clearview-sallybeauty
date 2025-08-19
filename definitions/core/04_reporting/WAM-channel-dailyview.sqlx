@@ -38,14 +38,27 @@ pre_operations {
   }
 }
 
-SELECT session_date as date, 
-        cross_channel_campaign.primary_channel_group,
+
+SELECT event_date as date, 
+        session_traffic_source_last_click.cross_channel_campaign.primary_channel_group,
         count(distinct session_id) sessions,
-        count(distinct if(is_engaged_session, session_id, NULL)) engaged_sessions,
+        count(distinct if(event_params.session_engaged=1, session_id, NULL)) engaged_sessions,
+        -- count(distinct session_info.engaged_session_id) engaged_sessions, -- this overcounts for some reason  - trobleshoot
         count(distinct user_pseudo_id) users,
-        sum(purchase_revenue) revenue,
-        sum(transactions) transactions,
-  FROM ${ref("ga4_sessions")}
- group by primary_channel_group, session_date
+        sum(ecommerce.purchase_revenue) revenue,
+        count(distinct ecommerce.transaction_id) transactions,
+  FROM ${ref("base_ga4_events")}
+  where event_date >= date_checkpoint
+ group by date, primary_channel_group
+
+-- SELECT session_date as date, 
+--         cross_channel_campaign.primary_channel_group,
+--         count(distinct session_id) sessions,
+--         count(distinct if(is_engaged_session, session_id, NULL)) engaged_sessions,
+--         count(distinct user_pseudo_id) users,
+--         sum(purchase_revenue) revenue,
+--         sum(transactions) transactions,
+--   FROM ${ref("ga4_sessions")}
+--  group by primary_channel_group, session_date
 
  
