@@ -1,9 +1,9 @@
 defaultAssertionDataset:  gmp_quality
 defaultLocation: US
-defaultProject: sallybeauty-us-ga4
+defaultProject: sallybeauty-us-ga4-app
 vars:
-  OUTPUT_PROJECT: sallybeauty-us-ga4
-  GA4_DATASET: analytics_320983557
+  OUTPUT_PROJECT: sallybeauty-us-ga4-app
+  GA4_DATASET: analytics_320990772
   LOCAL_TIMEZONE: America/New_York
   QUALITY_DATASET: gmp_quality
   TRANSFORMATIONS_DATASET: gmp_base 
