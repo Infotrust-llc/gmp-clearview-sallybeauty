@@ -10,6 +10,7 @@ config {
     tags: ["wam","reporting", "prod"],
     database: dataform.projectConfig.vars.OUTPUT_PROJECT,
     schema: dataform.projectConfig.vars.REPORTING_DATASET,
+    dependencies: ["base_ga4_events"],
     bigquery: {
       partitionBy: "date"
      // labels: require("includes/core/helpers.js").helpers.storageLabels()

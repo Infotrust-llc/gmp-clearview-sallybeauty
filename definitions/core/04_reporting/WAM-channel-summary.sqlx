@@ -12,6 +12,7 @@ config {
     // materialized: true,    -- cannot materialized due to COUNT DISTINCT
     database: dataform.projectConfig.vars.OUTPUT_PROJECT,
     schema: dataform.projectConfig.vars.REPORTING_DATASET,
+    dependencies: ["base_ga4_events"]
 }
 
  -- WAM-channel_dailyview - BASE SESSIONS table

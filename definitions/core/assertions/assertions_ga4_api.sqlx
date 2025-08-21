@@ -4,7 +4,7 @@ config {
     schema: dataform.projectConfig.vars.QUALITY_DATASET,
     description: "checking base metrics against GA4 API",
     dependencies: ["assertion_logs",{name:"base_ga4_events"}],
-    tags:["prod", "assertions"],
+    tags:[ "assertions"],
 }
 js {
     const { helpers } = require("includes/core/helpers");
