@@ -58,8 +58,8 @@ with query_source as (
     where true
 
     -- incrementality clause
-    -- and parse_date('%Y%m%d', regexp_extract(event_date,'[0-9]+')) >= date_checkpoint -- have to use event_date instead of _table_suffix if we referer to events_2025* tables
-    and parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) between '2024-10-09' and '2025-05-31'
+    and parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) >= date_checkpoint
+     
     -- filters go here
 
     -- intraday filter: exclude
