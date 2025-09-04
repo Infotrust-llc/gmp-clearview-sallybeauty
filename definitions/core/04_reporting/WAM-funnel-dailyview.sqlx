@@ -50,7 +50,7 @@ SELECT 'open funnel' funnel_type, event_date as date,
   COUNT(DISTINCT IF(event_name="begin_checkout" , session_info.engaged_session_id, NULL)) begin_checkout,
   COUNT(DISTINCT IF(event_name="purchase" , session_info.engaged_session_id, NULL)) purchase,
 
-  FROM gmp_base.base_ga4_events
+  FROM ${ref("base_ga4_events")}
   where event_date >= date_checkpoint --between "2025-06-07" and  "2025-06-14"
  group by all
 
