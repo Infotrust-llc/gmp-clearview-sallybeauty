@@ -63,6 +63,7 @@ with query_source as (
     -- incrementality clause
      and parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) >= date_checkpoint 
     --  and parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) <= '2025-09-02' 
+        -- and _table_suffix between '20241001' and '20241103'
     
     -- filters go here
 
