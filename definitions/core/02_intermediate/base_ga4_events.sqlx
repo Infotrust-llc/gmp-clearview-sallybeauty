@@ -40,7 +40,7 @@ pre_operations {
       where is_final = true`,
       `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
   );
-    -- delete some older data, since this may be updated later by GA4
+    delete some older data, since this may be updated later by GA4
   ${
     when(incremental(),
       `delete from ${self()} where event_date >= date_checkpoint`
@@ -58,8 +58,8 @@ with query_source as (
     where true
 
     -- incrementality clause
-    -- and parse_date('%Y%m%d', regexp_extract(event_date,'[0-9]+')) >= date_checkpoint -- have to use event_date instead of _table_suffix if we referer to events_2025* tables
-    and parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) >= date_checkpoint
+     and parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) >= date_checkpoint
+        -- and _table_suffix between '20241001' and '20241105'
     -- filters go here
 
     -- intraday filter: exclude
@@ -416,7 +416,7 @@ step5 as (
     ) as click_ids
 
   from step4
-  where event_date >= date_checkpoint
+  -- where event_date >= date_checkpoint
 
 ),
 
