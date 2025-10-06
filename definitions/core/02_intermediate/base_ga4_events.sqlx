@@ -39,11 +39,11 @@ pre_operations {
       from ${self()} 
       where is_final = true`,
       `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
-  );
+  ) ;
     -- delete some older data, since this may be updated later by GA4
   ${
     when(incremental(),
-      `delete from ${self()} where event_date >= date_checkpoint`
+       `delete from ${self()} where event_date >= date_checkpoint`
       )
   }
 }
@@ -53,12 +53,13 @@ with query_source as (
     select
       _table_suffix as table_suffix,
       *
-    from ${ref("events_*")}
+     from ${ref("events_*")}
 
     where true
 
     -- incrementality clause
     and parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) >= date_checkpoint
+    -- and _table_suffix between '20241001' and '20241105'
      
     -- filters go here
 

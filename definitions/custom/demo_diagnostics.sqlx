@@ -1,27 +1,7 @@
-/*
-	This file is part of "GA4 Dataform Package".
-	Copyright (C) 2023-2024 Superform Labs <support@ga4dataform.com>
-	Artem Korneev, Jules Stuifbergen,
-	Johan van de Werken, Krisztián Korpa,
-	Simon Breton
-
-	This program is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, version 3 of the License.
-
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License in the LICENSE.txt file for more details.
-
-	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
-
-
 config {
     type: "table",
-    schema: dataform.projectConfig.vars.OUTPUTS_DATASET,
+    name: "daily_diagnostics",
+    schema: dataform.projectConfig.vars.QUALITY_DATASET,
     description: "What is in your GA4 - past 64 days",
     bigquery: {
         labels: require("includes/core/helpers.js").helpers.storageLabels()
@@ -44,8 +24,8 @@ js {
 
 -- only read this many days from the events table:
 pre_operations {
-  declare lookback_days INT64 default 64;
-  set @@query_label = "${helpers.executionLabels()}"
+  declare lookback_days INT64 default 7;
+--   set @@query_label = "${helpers.executionLabels()}"
 }
 
 with daily_diagnostics as (
@@ -123,7 +103,47 @@ with daily_diagnostics as (
         countif(session_id is null) as daily_sessionless_hits,
         count(*) as daily_hits,
     
-    from ${ref("ga4_events")}
+    from ${ref("base_ga4_events")} join
+    (select event_date, session_id, user_pseudo_id, event_name, event_timestamp,
+    array(
+      ( select struct(
+            item_id,
+            item_name,
+            item_brand,
+            item_variant,
+            item_category,
+            item_category2,
+            item_category3,
+            item_category4,
+            item_category5,
+            price_in_usd,
+            price,
+            quantity,
+            item_revenue_in_usd,
+            item_revenue,
+            item_refund_in_usd,
+            item_refund,
+            coupon,
+            affiliation,
+            location_id,
+            item_list_id,
+            item_list_name,
+            item_list_index,
+            promotion_id,
+            promotion_name,
+            creative_name,
+            creative_slot
+            )
+      )
+    ) as items
+
+    from ${ref("base_ga4_items")}
+    where event_date >= date_sub(
+      current_date(),
+      interval lookback_days day
+    ) 
+    group by all) ga4_items 
+    using (event_date, session_id, user_pseudo_id, event_name, event_timestamp)
     where event_date >= date_sub(
       current_date(),
       interval lookback_days day
@@ -146,7 +166,7 @@ with daily_diagnostics as (
         -- duplicate transactions: transactions minus distinct transactions
         countif(ecommerce.transaction_id is not null) - count(distinct ecommerce.transaction_id) as weekly_duplicate_transactions,
 
-    from ${ref("ga4_events")}
+    from ${ref("base_ga4_events")}
     where event_date >= date_sub(
       current_date(),
       interval lookback_days day

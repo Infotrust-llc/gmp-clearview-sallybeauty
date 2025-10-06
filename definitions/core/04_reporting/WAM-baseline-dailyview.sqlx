@@ -41,7 +41,7 @@ pre_operations {
 
 
 SELECT
-  DATE(TIMESTAMP_MICROS(event_timestamp)) AS date, 
+  DATE(TIMESTAMP_MICROS(event_timestamp), '${dataform.projectConfig.vars.LOCAL_TIMEZONE}') AS date, 
   count(distinct session_id) sessions,
   count(distinct session_info.engaged_session_id) engaged_sessions,
   count(distinct user_pseudo_id) users,

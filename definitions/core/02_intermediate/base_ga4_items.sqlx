@@ -49,6 +49,7 @@ pre_operations {
       `delete from ${self()} where event_date >= date_checkpoint`
       )
   }
+ 
 }
 
 with query_source as (
@@ -62,7 +63,7 @@ with query_source as (
 
     -- incrementality clause
      and parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) >= date_checkpoint 
-    --  and parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) <= '2025-09-02' 
+      --  and _table_suffix between '20250901' and '20250901'
     
     -- filters go here
 

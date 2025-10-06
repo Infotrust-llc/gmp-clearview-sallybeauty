@@ -4,7 +4,7 @@ defaultProject: sallybeauty-us-ga4
 vars:
   OUTPUT_PROJECT: sallybeauty-us-ga4
   GA4_DATASET: analytics_320983557
-  LOCAL_TIMEZONE: America/New_York
+  LOCAL_TIMEZONE: America/Chicago
   QUALITY_DATASET: gmp_quality
   TRANSFORMATIONS_DATASET: gmp_base 
   OUTPUTS_DATASET: gmp_outputs 
