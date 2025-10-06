@@ -41,7 +41,7 @@ pre_operations {
 
 
 SELECT
-  DATE(TIMESTAMP_MICROS(event_timestamp), '${dataform.projectConfig.vars.LOCAL_TIMEZONE}') AS date, 
+  event_date AS date, 
   lower(event_params_custom.fulfillment_method) as order_fulfillment,
   sum(ecommerce.purchase_revenue_in_usd) as revenue,
   count(ecommerce.transaction_id) as orders,
