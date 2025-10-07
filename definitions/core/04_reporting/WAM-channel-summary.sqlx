@@ -18,21 +18,33 @@ config {
  -- WAM-channel_dailyview - BASE SESSIONS table
 
 SELECT 'WTD' as period,
-        cross_channel_campaign.primary_channel_group channel_group,
+    -- cross_channel_campaign.primary_channel_group channel_group,
+      CASE WHEN 
+            REGEXP_CONTAINS(cross_channel_campaign.campaign_name, 'GGL - YT - Video') 
+            THEN 'Paid Total'
+      ELSE 
+            cross_channel_campaign.primary_channel_group
+      END AS channel_group,
         count(distinct session_id) sessions,
         count(distinct if(is_engaged_session, session_id, NULL)) engaged_sessions,
         count(distinct user_pseudo_id) users,
-        sum(purchase_revenue) revenue,
-        sum(transactions) transactions,
+     sum(transactions) transactions,
+    SUM(purchase_revenue) AS purchase_revenue,
   FROM ${ref("ga4_sessions")}
   where session_date >= DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)) - INTERVAL 1 WEEK
         AND session_date < DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY))
-        group by channel_group
+        group by all
 
 UNION ALL
 
 SELECT 'MTD' as period, 
-    cross_channel_campaign.primary_channel_group channel_group,
+    -- cross_channel_campaign.primary_channel_group channel_group,
+      CASE WHEN 
+            REGEXP_CONTAINS(cross_channel_campaign.campaign_name, 'GGL - YT - Video') 
+            THEN 'Paid Total'
+      ELSE 
+            cross_channel_campaign.primary_channel_group
+      END AS channel_group,
     COUNT(DISTINCT session_id) AS sessions,
     count(distinct if(is_engaged_session, session_id, NULL)) engaged_sessions,
     COUNT(DISTINCT user_pseudo_id) AS users,
@@ -42,12 +54,18 @@ SELECT 'MTD' as period,
   from ${ref("ga4_sessions")}
   where session_date >= DATE_TRUNC(DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY), MONTH) 
     AND session_date <= DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY)
-        group by channel_group
+        group by all
 
 UNION ALL
 
 SELECT 'QTD' as period, 
-    cross_channel_campaign.primary_channel_group channel_group,
+    -- cross_channel_campaign.primary_channel_group channel_group,
+      CASE WHEN 
+            REGEXP_CONTAINS(cross_channel_campaign.campaign_name, 'GGL - YT - Video') 
+            THEN 'Paid Total'
+      ELSE 
+            cross_channel_campaign.primary_channel_group
+      END AS channel_group,
     COUNT(DISTINCT session_id) AS sessions,
     count(distinct if(is_engaged_session, session_id, NULL)) engaged_sessions,
     COUNT(DISTINCT user_pseudo_id) AS users,
@@ -63,12 +81,18 @@ SELECT 'QTD' as period,
                 WHEN EXTRACT(MONTH FROM  DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY)) BETWEEN 7 AND 9 THEN DATE(EXTRACT(YEAR FROM  DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY)), 7, 1)
             END
   AND session_date <= DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY)
-  group by channel_group
+  group by all
 
 UNION ALL
 
 SELECT 'YTD' as period,
-    cross_channel_campaign.primary_channel_group channel_group,
+    -- cross_channel_campaign.primary_channel_group channel_group,
+      CASE WHEN 
+            REGEXP_CONTAINS(cross_channel_campaign.campaign_name, 'GGL - YT - Video') 
+            THEN 'Paid Total'
+      ELSE 
+            cross_channel_campaign.primary_channel_group
+      END AS channel_group,
     COUNT(DISTINCT session_id) AS sessions,
     count(distinct if(is_engaged_session, session_id, NULL)) engaged_sessions,
     COUNT(DISTINCT user_pseudo_id) AS users,
@@ -78,4 +102,4 @@ SELECT 'YTD' as period,
   from ${ref("ga4_sessions")}
   where session_date >= DATE_TRUNC(DATE(EXTRACT(YEAR FROM CURRENT_DATE()) - IF(EXTRACT(MONTH FROM CURRENT_DATE()) < 10, 1, 0), 10, 1), MONTH)
         AND session_date <= DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY) 
-      group by channel_group
+      group by all
