@@ -40,7 +40,13 @@ pre_operations {
 
 
 SELECT event_date as date, 
-        session_traffic_source_last_click.cross_channel_campaign.primary_channel_group,
+    -- session_traffic_source_last_click.cross_channel_campaign.primary_channel_group channel_group,
+      CASE WHEN 
+            REGEXP_CONTAINS(session_traffic_source_last_click.cross_channel_campaign.campaign_name, 'GGL - YT - Video') 
+            THEN 'Paid Total'
+      ELSE 
+            session_traffic_source_last_click.cross_channel_campaign.primary_channel_group
+      END AS channel_group,
         count(distinct session_id) sessions,
         count(distinct if(event_params.session_engaged=1, session_id, NULL)) engaged_sessions,
         -- count(distinct session_info.engaged_session_id) engaged_sessions, -- this overcounts for some reason  - trobleshoot
@@ -49,7 +55,7 @@ SELECT event_date as date,
         count(distinct ecommerce.transaction_id) transactions,
   FROM ${ref("base_ga4_events")}
   where event_date >= date_checkpoint
- group by date, primary_channel_group
+ group by all
 
 -- SELECT session_date as date, 
 --         cross_channel_campaign.primary_channel_group,
