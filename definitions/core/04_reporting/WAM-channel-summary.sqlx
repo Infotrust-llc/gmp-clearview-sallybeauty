@@ -19,10 +19,10 @@ config {
 SELECT 'WTD' as period,
     -- cross_channel_campaign.primary_channel_group channel_group,
       CASE WHEN 
-            REGEXP_CONTAINS(session_traffic_source_last_click.cross_channel_campaign.campaign_name, 'GGL - YT - Video') 
+            REGEXP_CONTAINS(cross_channel_campaign.campaign_name, 'GGL - YT - Video') 
             THEN 'Paid Total'
       ELSE 
-            session_traffic_source_last_click.cross_channel_campaign.primary_channel_group
+            cross_channel_campaign.primary_channel_group
       END AS channel_group,
         count(distinct session_id) sessions,
         count(distinct if(is_engaged_session, session_id, NULL)) engaged_sessions,
@@ -39,10 +39,10 @@ UNION ALL
 SELECT 'MTD' as period, 
     -- cross_channel_campaign.primary_channel_group channel_group,
       CASE WHEN 
-            REGEXP_CONTAINS(session_traffic_source_last_click.cross_channel_campaign.campaign_name, 'GGL - YT - Video') 
+            REGEXP_CONTAINS(cross_channel_campaign.campaign_name, 'GGL - YT - Video') 
             THEN 'Paid Total'
       ELSE 
-            session_traffic_source_last_click.cross_channel_campaign.primary_channel_group
+            cross_channel_campaign.primary_channel_group
       END AS channel_group,
     COUNT(DISTINCT session_id) AS sessions,
     count(distinct if(is_engaged_session, session_id, NULL)) engaged_sessions,
@@ -60,10 +60,10 @@ UNION ALL
 SELECT 'QTD' as period, 
     -- cross_channel_campaign.primary_channel_group channel_group,
       CASE WHEN 
-            REGEXP_CONTAINS(session_traffic_source_last_click.cross_channel_campaign.campaign_name, 'GGL - YT - Video') 
+            REGEXP_CONTAINS(cross_channel_campaign.campaign_name, 'GGL - YT - Video') 
             THEN 'Paid Total'
       ELSE 
-            session_traffic_source_last_click.cross_channel_campaign.primary_channel_group
+            cross_channel_campaign.primary_channel_group
       END AS channel_group,
 
     COUNT(DISTINCT session_id) AS sessions,
@@ -88,10 +88,10 @@ UNION ALL
 SELECT 'YTD' as period,
     -- cross_channel_campaign.primary_channel_group channel_group,
       CASE WHEN 
-            REGEXP_CONTAINS(session_traffic_source_last_click.cross_channel_campaign.campaign_name, 'GGL - YT - Video') 
+            REGEXP_CONTAINS(cross_channel_campaign.campaign_name, 'GGL - YT - Video') 
             THEN 'Paid Total'
       ELSE 
-            session_traffic_source_last_click.cross_channel_campaign.primary_channel_group
+            cross_channel_campaign.primary_channel_group
       END AS channel_group,
     COUNT(DISTINCT session_id) AS sessions,
     count(distinct if(is_engaged_session, session_id, NULL)) engaged_sessions,
