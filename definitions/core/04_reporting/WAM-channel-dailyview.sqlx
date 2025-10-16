@@ -21,6 +21,7 @@ js {
     const config = helpers.getConfig();
 }
 
+
 /* incrementality */
 pre_operations {
   declare date_checkpoint DATE;
@@ -41,29 +42,44 @@ pre_operations {
 
 SELECT event_date as date, 
     -- cross_channel_campaign.primary_channel_group channel_group,
-      CASE WHEN 
-            REGEXP_CONTAINS(session_traffic_source_last_click.cross_channel_campaign.campaign_name, 'GGL - YT - Video') 
-            THEN 'Paid Total'
-      ELSE 
-            session_traffic_source_last_click.cross_channel_campaign.primary_channel_group
+
+            CASE WHEN event_date >='2024-10-09'       -- session_traffic_source_last_click first available date    
+                  THEN 
+                        CASE WHEN -- adjustment for YoutUBe video attribution
+                                    REGEXP_CONTAINS(session_traffic_source_last_click.cross_channel_campaign.campaign_name, 'GGL - YT - Video') 
+                                    THEN 'Paid Total'
+                        ELSE 
+                              session_traffic_source_last_click.cross_channel_campaign.primary_channel_group
+                        END
+                  ELSE
+                    -- session_traffic_source_last_click.cross_channel_campaign.primary_channel_group
+                        `sallybeauty-us-ga4.analytics_320983557.channel_grouping_prod`(
+                              session_traffic_source_last_click.cross_channel_campaign.source, 
+                              session_traffic_source_last_click.cross_channel_campaign.medium,
+                              session_traffic_source_last_click.cross_channel_campaign.campaign_name
+                        )
+            
       END AS channel_group,
-        count(distinct session_id) sessions,
-        count(distinct if(event_params.session_engaged=1, session_id, NULL)) engaged_sessions,
-        -- count(distinct session_info.engaged_session_id) engaged_sessions, -- this overcounts for some reason  - trobleshoot
-        count(distinct user_pseudo_id) users,
-        sum(ecommerce.purchase_revenue) revenue,
-        count(distinct ecommerce.transaction_id) transactions,
+
+      count(distinct session_id) sessions,
+      count(distinct if(event_params.session_engaged=1, session_id, NULL)) engaged_sessions,
+      -- count(distinct session_info.engaged_session_id) engaged_sessions, -- this overcounts for some reason  - trobleshoot
+      count(distinct user_pseudo_id) users,
+      sum(ecommerce.purchase_revenue) revenue,
+      count(distinct ecommerce.transaction_id) transactions,
   FROM ${ref("base_ga4_events")}
   where event_date >= date_checkpoint
  group by all
--- SELECT session_date as date, 
---         cross_channel_campaign.primary_channel_group,
---         count(distinct session_id) sessions,
---         count(distinct if(is_engaged_session, session_id, NULL)) engaged_sessions,
---         count(distinct user_pseudo_id) users,
---         sum(purchase_revenue) revenue,
---         sum(transactions) transactions,
---   FROM ${ref("ga4_sessions")}
---  group by primary_channel_group, session_date
+ having sessions>0
+ 
+-- -- SELECT session_date as date, 
+-- --         cross_channel_campaign.primary_channel_group,
+-- --         count(distinct session_id) sessions,
+-- --         count(distinct if(is_engaged_session, session_id, NULL)) engaged_sessions,
+-- --         count(distinct user_pseudo_id) users,
+-- --         sum(purchase_revenue) revenue,
+-- --         sum(transactions) transactions,
+-- --   FROM ${ref("ga4_sessions")}
+-- --  group by primary_channel_group, session_date
 
  

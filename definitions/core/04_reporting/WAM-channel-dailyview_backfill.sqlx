@@ -1,0 +1,57 @@
+
+  /*
+  This file is part of "GMP Clearview" package.
+  Copyright (C)  2025 Infotrust 
+  Alina Zilbergerts, Trish Dothkar,
+  -- */
+
+config {
+    type: "operations",
+    tags: ["wam","reporting", "prod"]
+}
+
+js {
+    const { helpers } = require("includes/core/helpers");
+    const config = helpers.getConfig();
+}
+
+
+DECLARE start_date DATE DEFAULT '2024-10-01';
+DECLARE end_date DATE DEFAULT '2024-12-31';
+
+
+DELETE FROM  ${ref("WAM-channel-dailyview")} WHERE date between start_date and end_date;
+INSERT INTO  ${ref("WAM-channel-dailyview")}
+
+
+SELECT event_date as date, 
+    -- cross_channel_campaign.primary_channel_group channel_group,
+      CASE WHEN 
+            REGEXP_CONTAINS(session_traffic_source_last_click.cross_channel_campaign.campaign_name, 'GGL - YT - Video') 
+            THEN 'Paid Total'
+      ELSE 
+            session_traffic_source_last_click.cross_channel_campaign.primary_channel_group
+            -- ${helpers.getdefaultChannelGroupingSQL("session_traffic_source_last_click")} 
+      END AS channel_group,
+
+      count(distinct session_id) sessions,
+      count(distinct if(event_params.session_engaged=1, session_id, NULL)) engaged_sessions,
+      -- count(distinct session_info.engaged_session_id) engaged_sessions, -- this overcounts for some reason  - trobleshoot
+      count(distinct user_pseudo_id) users,
+      sum(ecommerce.purchase_revenue) revenue,
+      count(distinct ecommerce.transaction_id) transactions,
+  FROM ${ref("base_ga4_events")}
+  where event_date between start_date and end_date
+ group by all
+
+-- -- SELECT session_date as date, 
+-- --         cross_channel_campaign.primary_channel_group,
+-- --         count(distinct session_id) sessions,
+-- --         count(distinct if(is_engaged_session, session_id, NULL)) engaged_sessions,
+-- --         count(distinct user_pseudo_id) users,
+-- --         sum(purchase_revenue) revenue,
+-- --         sum(transactions) transactions,
+-- --   FROM ${ref("ga4_sessions")}
+-- --  group by primary_channel_group, session_date
+
+ 
