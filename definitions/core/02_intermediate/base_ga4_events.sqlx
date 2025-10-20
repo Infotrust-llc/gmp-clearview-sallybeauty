@@ -40,7 +40,7 @@ pre_operations {
       where is_final = true`,
       `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
   );
-    delete some older data, since this may be updated later by GA4
+    -- delete some older data, since this may be updated later by GA4
   ${
     when(incremental(),
       `delete from ${self()} where event_date >= date_checkpoint`
