@@ -1,0 +1,81 @@
+CREATE OR REPLACE FUNCTION `${dataform.projectConfig.vars.OUTPUT_PROJECT}.${dataform.projectConfig.vars.REPORTING_DATASET}.channel_grouping_prod`(tsource STRING, medium STRING, campaign STRING) AS (
+case
+
+ -----***Paid Search***---
+WHEN ((REGEXP_CONTAINS(tsource, r'^(google|bing)$') AND REGEXP_CONTAINS(medium, r'^(.*cp.*|ppc|paid.*)$')) 
+            OR REGEXP_CONTAINS(tsource, r'^((unlinked SA360 account))$') 
+            OR REGEXP_CONTAINS(medium, r'^((unlinked SA360 account))$')) 
+            AND NOT REGEXP_CONTAINS(lower(campaign), r'^(pla|.*performance.max.*|.*performance.max.*|.*pmax.*)$') 
+            then 'Paid Search'
+-------****Paid Shopping(PLA)*****--------
+when  regexp_contains(campaign, r'^pla|.*performance.max.*|.*performance.max.*|.*pmax.*$' ) --r'^(.*PLA.*)$'
+            and medium = 'cpc' 
+            then 'Paid Shopping (PLA)'
+------*****Perfomance Max*****----
+-- when regexp_contains(campaign, r'^(.*performance.max.*|.*Performance.Max.*|.*pmax.*)$') then 'Perfomance Max'
+-------*****App****--------
+when medium = 'app' then 'App'
+-------****QR*****--------
+when medium = 'qr' then 'QR'
+-------****Email*****--------
+when regexp_contains(TRIM(medium), r'^email|Email$')  then 'Email'
+
+-------****Influencer*****--------
+when REGEXP_CONTAINS(LOWER(medium), 'influencer|inflencer') then 'Influencer'
+-------****Paid Affiliates*****--------
+ when regexp_contains(medium, r'^CJ|sharesale|affiliate$') or regexp_contains(tsource, r'^affiliate$') 
+            then 'Paid Affiliates'
+-------****Display*****--------
+  when regexp_contains(medium, r'^(display|banner|expandable|interstitial|cpm)$') or tsource = 'display'
+            then 'Display'
+-------****Paid Social*****--------
+ when regexp_contains(tsource, r'^(twitter|facebook|fb|instagram|ig|linkedin|pinterest|tiktok)$')
+            and regexp_contains(medium, r'^(.*cp.*|ppc|paid.*|social_paid)$') 
+            then 'Paid Social'
+-------****Paid Video*****--------
+when regexp_contains(tsource, r'^(ott|youtube)$')
+            and medium = 'cpc'  
+            then 'Paid Video'
+-------****Paid Other*****--------
+when regexp_contains(medium, r'^(.*cp.*|ppc|paid.*)$') 
+            then 'Paid Other'
+-------****SMS and MMS*****--------
+when regexp_contains(medium, r'^(MMS|mms|SMS|sms|CRM-5069_SBHA_USA_SMS_2OffHempz)') then 'SMS and MMS'
+-------****Public Relations*****--------
+when medium = 'pr' 
+            then 'Public Relations'
+ ---------***Artificial Intelligence***------------
+when regexp_contains(tsource, r"chatgpt\.com|gemini\.google\.com|perplexity|Perplexity")
+    then 'Artificial Intelligence'
+-------*****Organic Shopping****---------
+when regexp_contains(lower(tsource), r'^(igshopping|.*amazon.*)') 
+    or regexp_contains(medium, r'^(.*shop.*)$') 
+     or regexp_contains(campaign, r'^(.*shop.*)$') 
+            then 'Organic Shopping'
+------*****Organic Social****--------
+ when regexp_contains(tsource, r'^.*(twitter|t\.co|facebook|instagram|linkedin|lnkd\.in|pinterest|reddit|tiktok|yelp|snapchat).*') 
+            or regexp_contains(medium, r'^(social|social_advertising|social-advertising|social_network|social-network|social_media|social-media|sm|social-unpaid|social_unpaid)$') 
+            then 'Organic Social'
+-------****Organic Video*****--------
+   when (regexp_contains(tsource, r'^(.*youtube.*)$') and regexp_contains(medium, r'^referral$') )
+    or regexp_contains(medium, r'^(.*video.*)$') 
+    or regexp_contains(campaign, r'^(.*video.*)$') 
+            then 'Organic Video'
+-------*****Organic Search****--------
+  when regexp_contains(tsource, r'^(google|bing|yahoo|baidu|duckduckgo|yandex|ask)$') 
+            or medium = 'organic'
+            then 'Organic Search'
+-------****Refferal*****--------
+ when medium = 'referral'
+            then 'Referral'
+-------****Direct*****--------
+ when (regexp_contains(tsource,'direct') or tsource is null) 
+      and (regexp_contains(medium, r'^(\(not set\)|\(none\))$') or medium is null) 
+            then 'Direct'
+-------****Audio*****--------
+when medium = 'audio' 
+            then 'Aaudio'
+ ---------***Other***------------
+       else 'Unassigned'
+    end
+);

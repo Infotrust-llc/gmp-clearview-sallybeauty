@@ -53,10 +53,10 @@ SELECT event_date as date,
                         END
                   ELSE
                     -- session_traffic_source_last_click.cross_channel_campaign.primary_channel_group
-                        `${dataform.projectConfig.vars.OUTPUT_PROJECT}.${dataform.projectConfig.vars.GA4_DATASET}.channel_grouping_prod`(
-                              session_traffic_source_last_click.cross_channel_campaign.source, 
-                              session_traffic_source_last_click.cross_channel_campaign.medium,
-                              session_traffic_source_last_click.cross_channel_campaign.campaign_name
+                        `${dataform.projectConfig.vars.OUTPUT_PROJECT}.${dataform.projectConfig.vars.REPORTING_DATASET}.channel_grouping_prod`(
+                              collected_traffic_source.manual_source, 
+                              collected_traffic_source.manual_medium,
+                              collected_traffic_source.manual_campaign_name
                         )
             
       END AS channel_group,
