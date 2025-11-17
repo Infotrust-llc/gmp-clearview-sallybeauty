@@ -15,7 +15,19 @@ config {
 }
 
  -- WAM-funnel - BASE GA4 events table
-with ga4_prep AS (
+
+ with push_sessions as (
+  SELECT 
+    event_date, 
+    session_id,
+    ARRAY_TO_STRING( ARRAY_AGG(event_name ORDER BY event_timestamp, batch.batch_event_index), '->' ) aggregated_string 
+  FROM  ${ref("base_ga4_events")} e 
+  GROUP BY ALL
+  HAVING  (aggregated_string="session_start->screen_view"
+       OR aggregated_string="session_start->screen_view->view_promotion")
+)
+
+, prep1 AS (
     SELECT
         event_date, 
         user_pseudo_id,
@@ -30,6 +42,12 @@ with ga4_prep AS (
      --SELECT event_date, session_id, engaged_session_id, transaction_id, purchase_revenue
      -- FROM SallyBeauty_GA_WEB.ga4_sessions --wam_baseline_funnel 
 )
+
+-- Excluding Push / Empty sessions
+, ga4_prep as (
+    select * from prep1 where session_id not in (select distinct session_id from push_sessions)
+)
+
 
 SELECT   
 '1' as step,
