@@ -15,6 +15,16 @@ config {
 }
 
  -- WAM-channel_dailyview - BASE SESSIONS table
+ with push_sessions as (
+  SELECT 
+    event_date, 
+    session_id,
+    ARRAY_TO_STRING( ARRAY_AGG(event_name ORDER BY event_timestamp, batch.batch_event_index), '->' ) aggregated_string 
+  FROM  ${ref("base_ga4_events")} e 
+  GROUP BY ALL
+  HAVING  (aggregated_string="session_start->screen_view"
+       OR aggregated_string="session_start->screen_view->view_promotion")
+)
 
 SELECT 'WTD' as period,
     -- cross_channel_campaign.primary_channel_group channel_group,
@@ -32,6 +42,7 @@ SELECT 'WTD' as period,
   FROM ${ref("ga4_sessions")}
   where session_date >= DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)) - INTERVAL 1 WEEK
         AND session_date < DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY))
+AND session_id not in (SELECT distinct session_id FROM push_sessions)   
         group by all
 
 UNION ALL
@@ -53,6 +64,7 @@ SELECT 'MTD' as period,
   from ${ref("ga4_sessions")}
   where session_date >= DATE_TRUNC(DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY), MONTH) 
     AND session_date <= DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY)
+      AND session_id not in (SELECT distinct session_id FROM push_sessions)   
         group by all
 
 UNION ALL
@@ -80,6 +92,7 @@ SELECT 'QTD' as period,
                 WHEN EXTRACT(MONTH FROM  DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY)) BETWEEN 7 AND 9 THEN DATE(EXTRACT(YEAR FROM  DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY)), 7, 1)
             END
   AND session_date <= DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY)
+  AND session_id not in (SELECT distinct session_id FROM push_sessions)   
   group by all
 
 UNION ALL
@@ -101,4 +114,5 @@ SELECT 'YTD' as period,
   from ${ref("ga4_sessions")}
   where session_date >= DATE_TRUNC(DATE(EXTRACT(YEAR FROM CURRENT_DATE()) - IF(EXTRACT(MONTH FROM CURRENT_DATE()) < 10, 1, 0), 10, 1), MONTH)
         AND session_date <= DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SUNDAY)), INTERVAL 1 DAY) 
+AND session_id not in (SELECT distinct session_id FROM push_sessions)   
       group by all

@@ -38,6 +38,16 @@ pre_operations {
   }
 }
 
+ with push_sessions as (
+  SELECT 
+    event_date, 
+    session_id,
+    ARRAY_TO_STRING( ARRAY_AGG(event_name ORDER BY event_timestamp, batch.batch_event_index), '->' ) aggregated_string 
+  FROM  ${ref("base_ga4_events")} e 
+  GROUP BY ALL
+  HAVING  (aggregated_string="session_start->screen_view"
+       OR aggregated_string="session_start->screen_view->view_promotion")
+)
 
 SELECT event_date as date, 
     -- cross_channel_campaign.primary_channel_group channel_group,
@@ -55,16 +65,8 @@ SELECT event_date as date,
         count(distinct ecommerce.transaction_id) transactions,
   FROM ${ref("base_ga4_events")}
   where event_date >= date_checkpoint
+  AND session_id not in (SELECT distinct session_id FROM push_sessions)
  group by all
 
--- SELECT session_date as date, 
---         cross_channel_campaign.primary_channel_group,
---         count(distinct session_id) sessions,
---         count(distinct if(is_engaged_session, session_id, NULL)) engaged_sessions,
---         count(distinct user_pseudo_id) users,
---         sum(purchase_revenue) revenue,
---         sum(transactions) transactions,
---   FROM ${ref("ga4_sessions")}
---  group by primary_channel_group, session_date
 
  

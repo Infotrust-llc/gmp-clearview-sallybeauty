@@ -40,6 +40,17 @@ pre_operations {
 }
 
 
+ with push_sessions as (
+  SELECT 
+    event_date, 
+    session_id,
+    ARRAY_TO_STRING( ARRAY_AGG(event_name ORDER BY event_timestamp, batch.batch_event_index), '->' ) aggregated_string 
+  FROM  ${ref("base_ga4_events")} e 
+  GROUP BY ALL
+  HAVING  (aggregated_string="session_start->screen_view"
+       OR aggregated_string="session_start->screen_view->view_promotion")
+)
+
 SELECT
   event_date AS date, 
   count(distinct session_id) sessions,
@@ -51,5 +62,6 @@ SELECT
  
 FROM  ${ref("base_ga4_events")}
 WHERE event_date >= date_checkpoint
+AND session_id not in (SELECT distinct session_id FROM push_sessions)
 group by date
 

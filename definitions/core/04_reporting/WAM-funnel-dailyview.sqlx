@@ -39,6 +39,16 @@ pre_operations {
   }
 }
 
+ with push_sessions as (
+  SELECT 
+    event_date, 
+    session_id,
+    ARRAY_TO_STRING( ARRAY_AGG(event_name ORDER BY event_timestamp, batch.batch_event_index), '->' ) aggregated_string 
+  FROM  ${ref("base_ga4_events")} e 
+  GROUP BY ALL
+  HAVING  (aggregated_string="session_start->screen_view"
+       OR aggregated_string="session_start->screen_view->view_promotion")
+)
 
 SELECT 'open funnel' funnel_type, event_date as date,
   count(distinct session_id) sessions,
@@ -51,7 +61,8 @@ SELECT 'open funnel' funnel_type, event_date as date,
   COUNT(DISTINCT IF(event_name="purchase" , session_info.engaged_session_id, NULL)) purchase,
 
   FROM ${ref("base_ga4_events")}
-  where event_date >= date_checkpoint --between "2025-06-07" and  "2025-06-14"
+  where event_date >= date_checkpoint  
+    AND session_id not in (SELECT distinct session_id FROM push_sessions)
  group by all
 
 

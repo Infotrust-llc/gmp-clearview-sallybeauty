@@ -27,7 +27,7 @@ config {
        OR aggregated_string="session_start->screen_view->view_promotion")
 )
 
-, prep1 AS (
+, ga4_prep AS (
     SELECT
         event_date, 
         user_pseudo_id,
@@ -37,15 +37,11 @@ config {
          ecommerce.transaction_id,
          ecommerce.purchase_revenue 
      FROM ${ref("base_ga4_events")}
+    WHERE session_id not in (SELECT distinct session_id FROM push_sessions)-- Excluding Push / Empty sessions
 
     --REPLACED the above with PRECALCULATED flattened GA4 data table
      --SELECT event_date, session_id, engaged_session_id, transaction_id, purchase_revenue
      -- FROM SallyBeauty_GA_WEB.ga4_sessions --wam_baseline_funnel 
-)
-
--- Excluding Push / Empty sessions
-, ga4_prep as (
-    select * from prep1 where session_id not in (select distinct session_id from push_sessions)
 )
 
 

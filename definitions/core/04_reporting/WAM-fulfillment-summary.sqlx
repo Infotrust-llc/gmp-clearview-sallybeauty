@@ -15,7 +15,19 @@ config {
 }
 
  -- WAM-fulfillment summary - BASE GA4 events table
-with ga4_prep AS (
+
+with push_sessions as (
+  SELECT 
+    event_date, 
+    session_id,
+    ARRAY_TO_STRING( ARRAY_AGG(event_name ORDER BY event_timestamp, batch.batch_event_index), '->' ) aggregated_string 
+  FROM  ${ref("base_ga4_events")} e 
+  GROUP BY ALL
+  HAVING  (aggregated_string="session_start->screen_view"
+       OR aggregated_string="session_start->screen_view->view_promotion")
+)
+
+, ga4_prep AS (
     SELECT
       event_date,
       event_params_custom.fulfillment_method as order_fulfillment,
@@ -23,6 +35,7 @@ with ga4_prep AS (
       ecommerce.transaction_id
 
     FROM ${ref("base_ga4_events")}
+    WHERE session_id not in (SELECT distinct session_id FROM push_sessions)-- Excluding Push / Empty sessions
 
 )
 
