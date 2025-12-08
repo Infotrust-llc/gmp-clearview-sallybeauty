@@ -22,7 +22,7 @@ js {
   const config = helpers.getConfig();
   /* check if there's invalid columns or dupe columns in the custom column definitions */
   helpers.checkColumnNames(config);
-  const fieldnames_sql = helpers.getEventParamKeysArray(config, ref("events_*"), "event_params");
+  const fieldnames_sql = helpers.getEventParamKeysArray(config, ref("events_fresh_*"), "event_params");
   const base_tbl = self();
 
 }
@@ -53,7 +53,7 @@ with query_source as (
     select
       _table_suffix as table_suffix,
       *
-     from ${ref("events_*")}
+     from ${ref("events_fresh_*")}
 
     where true
 
@@ -66,7 +66,7 @@ with query_source as (
     -- intraday filter: exclude
     and contains_substr(_table_suffix, 'intraday') is false
     -- fresh filter: exclude
-    and contains_substr(_table_suffix, 'fresh') is false
+    -- and contains_substr(_table_suffix, 'fresh') is false
 
     -- filters from config:
     -- discard unwanted events

@@ -6,9 +6,8 @@ vars:
   GA4_DATASET: analytics_320983557
   LOCAL_TIMEZONE: America/Chicago
   QUALITY_DATASET: gmp_quality
-  TRANSFORMATIONS_DATASET: gmp_base 
-  OUTPUTS_DATASET: gmp_outputs 
-  REPORTING_DATASET: gmp_reporting 
+  TRANSFORMATIONS_DATASET: gmp_base_fresh
+  REPORTING_DATASET: gmp_reporting_fresh
   TABLE_SUFFIX: ""
 
 

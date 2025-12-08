@@ -66,7 +66,7 @@ pre_operations {
           sum( ecommerce.purchase_revenue) revenue,
 
           -- SUM(event_params.engagement_time_msec) engagment_time
-          FROM sallybeauty-us-ga4.gmp_base.base_ga4_events 
+          FROM ${ref("base_ga4_events")}
           WHERE event_date = date_checkpoint
           group by all
       )
