@@ -1,0 +1,42 @@
+
+  /*
+  This file is part of "GMP Clearview" package.
+  Copyright (C)  2025 Infotrust 
+  Alina Zilbergerts, Trish Dothkar,
+  -- */
+
+
+config {
+    type: "table",
+    tags: [dataform.projectConfig.vars.GA4_DATASET,"user_properties","dev"],
+    database: dataform.projectConfig.vars.OUTPUT_PROJECT,
+    schema: dataform.projectConfig.vars.TRANSFORMATIONS_DATASET,
+    name: "user_properties"
+}
+js {
+    const { helpers } = require("includes/core/helpers");
+    const config = helpers.getConfig();
+    const fieldnames_sql = helpers.getEventParamKeysArray(config, ref("events_*"), "event_params");
+    const base_tbl = self();
+}
+
+
+SELECT 
+   TO_JSON(ARRAY_AGG(STRUCT(name, type))) AS json_obj
+
+FROM (
+  SELECT distinct REGEXP_REPLACE(lower(up.key)," ", "_") as name,
+  CASE TRUE
+    WHEN max(value.int_value) is not null AND max(coalesce(value.double_value, value.float_value)) is null 
+          THEN "int"
+    WHEN max(coalesce(value.int_value, value.double_value, value.float_value)) is not null 
+          THEN "decimal"
+    ELSE "string"
+    END as type,
+
+    FROM  ${ref("events_*")}, unnest(user_properties) up
+
+    WHERE _TABLE_SUFFIX > format_date("%Y%m%d", DATE_SUB(CURRENT_DATE(), INTERVAL 180 DAY))
+    group by all
+)
+
