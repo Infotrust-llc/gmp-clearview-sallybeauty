@@ -72,22 +72,7 @@ const customConfig = {
   CUSTOM_EVENT_PARAMS_ARRAY: [
   // example set: this will populate 5 fields in the `event_params_custom` column in the `ga4_events` table
   // known limitation: the output column names must be valid. use letters and underscores to be safe 
-    {  type: "string",  name: "application_status" },
-    {  type: "string",  name: "monetate_id" },
-    {  type: "string",  name: "order_discount" },
-    {  type: "string",  name: "personalization_value" },
-    {  type: "string",  name: "fulfillment_method" },
-    {  type: "string",  name: "monetate_status" },
-    {  type: "string",  name: "coupon" },
-    {  type: "string",  name: "page_type" },
-    {  type: "string",  name: "checkout_type" },
-    {  type: "string",  name: "communication_type" },
-    {  type: "string",  name: "group_type" },
-    {  type: "string",  name: "interaction_type" },
-    {  type: "string",  name: "search_type" },
-    {  type: "string",  name: "video_current_type" },
-    {  type: "string",  name: "nav_type" },
-    {  type: "string",  name: "payment_type" }
+{"name":"application_status","type":"string"},{"name":"action_type","type":"string"},{"name":"affiliation","type":"string"},{"name":"autofill_search_category","type":"string"},{"name":"brand_selected","type":"string"},{"name":"category","type":"string"},{"name":"category_hierarchy1","type":"string"},{"name":"category_hierarchy2","type":"string"},{"name":"category_hierarchy3","type":"string"},{"name":"category_hierarchy4","type":"string"},{"name":"change_type","type":"string"},{"name":"checkout_step_number","type":"string"},{"name":"checkout_type","type":"string"},{"name":"colorview_experience","type":"string"},{"name":"communication_type","type":"string"},{"name":"coupon","type":"string"},{"name":"cta_name","type":"string"},{"name":"currency","type":"string"},{"name":"date_booked","type":"string"},{"name":"delivery_fee","type":"string"},{"name":"error_id","type":"string"},{"name":"error_message","type":"string"},{"name":"event_location","type":"string"},{"name":"experiment_name","type":"string"},{"name":"filter_action","type":"string"},{"name":"filter_category","type":"string"},{"name":"filter_selected","type":"string"},{"name":"filter_value","type":"string"},{"name":"form_name","type":"string"},{"name":"fulfillment_method","type":"string"},{"name":"group_type","type":"string"},{"name":"interaction_type","type":"string"},{"name":"link_classes","type":"string"},{"name":"link_domain","type":"string"},{"name":"link_id","type":"string"},{"name":"link_name","type":"string"},{"name":"list_name","type":"string"},{"name":"menu_level","type":"string"},{"name":"menu_select_category","type":"string"},{"name":"method","type":"string"},{"name":"monetate_id","type":"string"},{"name":"monetate_status","type":"string"},{"name":"nav_type","type":"string"},{"name":"nav_item_selected","type":"string"},{"name":"nav_level","type":"string"},{"name":"order_discount","type":"string"},{"name":"outbound","type":"string"},{"name":"page_breadcrumb","type":"string"},{"name":"page_name","type":"string"},{"name":"page_type","type":"string"},{"name":"payment_provider","type":"string"},{"name":"payment_type","type":"string"},{"name":"personalization_value","type":"string"},{"name":"points_earned","type":"string"},{"name":"product_answer_quantity","type":"string"},{"name":"product_question_quantity","type":"string"},{"name":"product_review_quantity","type":"string"},{"name":"product_review_score","type":"string"},{"name":"promotion_name","type":"string"},{"name":"promotion_text","type":"string"},{"name":"question_1","type":"string"},{"name":"question_2","type":"string"},{"name":"question_3","type":"string"},{"name":"question_4","type":"string"},{"name":"question_5","type":"string"},{"name":"recommended_term","type":"string"},{"name":"redeemed_gift_card_ammount","type":"string"},{"name":"search_result_count","type":"string"},{"name":"search_term","type":"string"},{"name":"search_type","type":"string"},{"name":"shipping","type":"string"},{"name":"shipping_method","type":"string"},{"name":"shipping_tier","type":"string"},{"name":"sort_type_selected","type":"string"},{"name":"star_rating","type":"string"},{"name":"sub_dropdown_selection","type":"string"},{"name":"sub_value","type":"string"},{"name":"subcategory","type":"string"},{"name":"subcategory_selection","type":"string"},{"name":"talkativeAction","type":"string"},{"name":"tax","type":"string"},{"name":"time_booked","type":"string"},{"name":"tipping_amount","type":"string"},{"name":"tipping_percentage","type":"string"},{"name":"transaction_id","type":"string"},{"name":"transaction_total","type":"string"},{"name":"use_shipping_address","type":"string"},{"name":"user_id","type":"string"},{"name":"value","type":"string"},{"name":"variant","type":"string"},{"name":"video_current_type","type":"string"},{"name":"video_duration","type":"string"},{"name":"video_percent","type":"string"},{"name":"video_provider","type":"string"},{"name":"video_title","type":"string"},{"name":"video_url","type":"string"},{"name":"visible","type":"string"},{"name":"vsu_registration_type","type":"string"},{"name":"vsu_step_name","type":"string"},{"name":"vsu_step_number","type":"string"}
 ],
 
   // user properties
@@ -96,13 +81,7 @@ const customConfig = {
   //    { name: "lifetime_value",   type: "decimal" }
   // ],
 CUSTOM_USER_PROPERTIES_ARRAY: [
-    {  type: "string",  name: "customer_id" },   
-    {  type: "string", name: "login_status" },
-    {  type: "string",  name: "email_subscriber" },
-    {  type: "string",  name: "text_subscriber" },
-    {  type: "string",  name: "remember_me_selected" },
-    {  type: "string",  name: "join_rewards" },
-    {  type: "string",  name: "reward_card_type" }
+{"name":"application_status","type":"string"},{"name":"customer_id","type":"string"},{"name":"email_subscriber","type":"string"},{"name":"join_rewards","type":"string"},{"name":"login_status","type":"string"},{"name":"loyalty_id","type":"string"},{"name":"remember_me_selected","type":"string"},{"name":"rewards_availability","type":"string"},{"name":"rewards_status","type":"string"},{"name":"rewards_points","type":"string"},{"name":"reward_card_type","type":"string"},{"name":"salesforce_contact_id","type":"string"},{"name":"signed_in_with_user_id","type":"string"},{"name":"store_id","type":"string"},{"name":"store_name","type":"string"},{"name":"text_subscriber","type":"string"},{"name":"user_group","type":"string"},{"name":"user_segment","type":"string"}
 ],
 
  CUSTOM_ITEM_PARAMS_TO_EXCLUDE: [], // by default,  all custom arams are unnested except thse listed here
@@ -113,20 +92,7 @@ CUSTOM_USER_PROPERTIES_ARRAY: [
   //    { name: "stock_status", type: "string" }
   // ]
   CUSTOM_ITEM_PARAMS_ARRAY: [
-    {  type: "string",  name: "item_badge_name" },   
-    {  type: "string", name: "item_color" },
-    {  type: "string",  name: "item_coupon" },
-    {  type: "string",  name: "item_free_from" },
-    {  type: "string",  name: "item_free_gift" },
-    {  type: "string",  name: "item_fulfillment_method" },
-    {  type: "string",  name: "item_hair_color_type" },
-    {  type: "string",  name: "item_in_wishlist" },
-    {  type: "string",  name: "item_possible_fulfillment_method" },
-    {  type: "string",  name: "item_protection_plan" },
-    {  type: "string",  name: "item_review_quantity" },
-    {  type: "string",  name: "item_review_score" },
-    {  type: "string",  name: "item_sub_brand" },
-    {  type: "string",  name: "item_variant_name" }
+{"name":"discount","type":"string"},{"name":"index","type":"string"},{"name":"item_badge_name","type":"string"},{"name":"item_brand","type":"string"},{"name":"item_bundle","type":"string"},{"name":"item_category","type":"string"},{"name":"item_category2","type":"string"},{"name":"item_category3","type":"string"},{"name":"item_category4","type":"string"},{"name":"item_color","type":"string"},{"name":"item_color_selection","type":"string"},{"name":"item_coupon","type":"string"},{"name":"item_free_from","type":"string"},{"name":"item_free_gift","type":"string"},{"name":"item_fulfillment_method","type":"string"},{"name":"item_gift_card","type":"string"},{"name":"item_hair_color_type","type":"string"},{"name":"item_id","type":"string"},{"name":"item_in_wishlist","type":"string"},{"name":"item_list_id","type":"string"},{"name":"item_list_name","type":"string"},{"name":"item_name","type":"string"},{"name":"item_out_of_scope","type":"string"},{"name":"item_oos","type":"string"},{"name":"item_possible_fulfillment_method","type":"string"},{"name":"item_protection_plan","type":"string"},{"name":"item_promo","type":"string"},{"name":"item_refinement_color","type":"string"},{"name":"item_review_count","type":"string"},{"name":"item_review_quantity","type":"string"},{"name":"item_review_score","type":"string"},{"name":"item_sku","type":"string"},{"name":"item_sub_brand","type":"string"},{"name":"item_variant","type":"string"},{"name":"item_variant_name","type":"string"},{"name":"price","type":"string"},{"name":"quantity","type":"string"}
   ],
 
   // URL parameters to extract to own column

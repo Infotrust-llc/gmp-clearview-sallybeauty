@@ -803,6 +803,22 @@ const getdefaultChannelGroupingSQL = (recordField) => {
     end
   `;
 };
+/**
+ * Function #29
+ * Generates SQL for multiple parameters KEYs unnest based on their configuration.
+ * @param {Array} config_array - Array of parameter configuration objects
+ * @param {string} [column='event_params'] - Column name containing the parameters
+ * @returns {string} SQL fragment for multiple parameters unnest
+ */
+const generateSQLFromParamKeyList = (config_array, column = "event_params") => {
+    return `
+      ${config_array
+        .map((config) => {
+          return "'" + config.name + "'";
+        })
+        .join(",\n")}
+    `;
+};
 
 
 const helpers = {
@@ -834,7 +850,8 @@ const helpers = {
   getSqlSelectEventsAsMetrics,
   getSqlPivotEventParams,
   generateParamSQL,
-  getdefaultChannelGroupingSQL
+  getdefaultChannelGroupingSQL,
+  generateSQLFromParamKeyList
 };
 
 module.exports = {
