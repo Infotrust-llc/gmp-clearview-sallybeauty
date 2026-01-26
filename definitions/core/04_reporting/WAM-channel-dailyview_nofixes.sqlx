@@ -1,0 +1,85 @@
+
+  /*
+  This file is part of "GMP Clearview" package.
+  Copyright (C)  2025 Infotrust 
+  Alina Zilbergerts, Trish Dothkar,
+  -- */
+
+config {
+    type: "incremental",
+    tags: ["wam","reporting", "dev"],
+    database: dataform.projectConfig.vars.OUTPUT_PROJECT,
+    schema: dataform.projectConfig.vars.REPORTING_DATASET,
+    bigquery: {
+      partitionBy: "date"
+     //labels: require("includes/core/helpers.js").helpers.storageLabels()
+    }
+}
+
+js {
+    const { helpers } = require("includes/core/helpers");
+    const config = helpers.getConfig();
+}
+
+
+/* incrementality */
+pre_operations {
+  declare date_checkpoint DATE;
+--   set @@query_label = "${helpers.executionLabels()}";
+  set date_checkpoint = (
+    ${when(incremental(),
+      `select coalesce(max(date) - ${config.DATA_IS_FINAL_DAYS}, date('${config.GA4_START_DATE}')) from ${self()}`,
+      `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
+  );
+    -- delete some older data, since this may be updated later by GA4
+  ${
+    when(incremental(),
+      `delete from ${self()} where date >= date_checkpoint`
+      )
+  }
+}
+
+
+SELECT event_date as date, 
+    -- cross_channel_campaign.primary_channel_group channel_group,
+
+            CASE WHEN event_date >='2024-10-09'       -- session_traffic_source_last_click first available date    
+                  THEN 
+                        CASE WHEN -- adjustment for YoutUBe video attribution
+                                    REGEXP_CONTAINS(session_traffic_source_last_click.cross_channel_campaign.campaign_name, 'GGL - YT - Video') 
+                                    THEN 'Paid Total'
+                        ELSE 
+                              session_traffic_source_last_click.cross_channel_campaign.primary_channel_group
+                        END
+                  ELSE
+                    -- session_traffic_source_last_click.cross_channel_campaign.primary_channel_group
+                        `${dataform.projectConfig.vars.OUTPUT_PROJECT}.${dataform.projectConfig.vars.REPORTING_DATASET}.channel_grouping_prod`(
+                              collected_traffic_source.manual_source, 
+                              collected_traffic_source.manual_medium,
+                              collected_traffic_source.manual_campaign_name
+                        )
+            
+      END AS channel_group,
+
+      count(distinct session_id) sessions,
+      count(distinct if(event_params.session_engaged=1, session_id, NULL)) engaged_sessions,
+      -- count(distinct session_info.engaged_session_id) engaged_sessions, -- this overcounts for some reason  - trobleshoot
+      count(distinct user_pseudo_id) users,
+      sum(ecommerce.purchase_revenue) revenue,
+      count(distinct ecommerce.transaction_id) transactions,
+  FROM ${ref("base_ga4_events")}
+  where event_date >= date_checkpoint
+ group by all
+ having sessions>0
+
+-- -- SELECT session_date as date, 
+-- --         cross_channel_campaign.primary_channel_group,
+-- --         count(distinct session_id) sessions,
+-- --         count(distinct if(is_engaged_session, session_id, NULL)) engaged_sessions,
+-- --         count(distinct user_pseudo_id) users,
+-- --         sum(purchase_revenue) revenue,
+-- --         sum(transactions) transactions,
+-- --   FROM ${ref("ga4_sessions")}
+-- --  group by primary_channel_group, session_date
+
+ 

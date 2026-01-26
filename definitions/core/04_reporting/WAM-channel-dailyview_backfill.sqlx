@@ -7,7 +7,7 @@
 
 config {
     type: "operations",
-    tags: ["wam","reporting", "prod"]
+    tags: ["wam","reporting", "dev"]
 }
 
 js {

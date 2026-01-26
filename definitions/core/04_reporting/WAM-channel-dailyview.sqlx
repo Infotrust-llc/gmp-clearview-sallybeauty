@@ -39,38 +39,125 @@ pre_operations {
   }
 }
 
+-- THIS IS a MASTER Channel grouping query, that is hybrid of Google recommended approachaand custom  logic
+-- 1) Google recommended approach: use session_traffic_source_last_click.cross_channel_campaign 
+--          The session_traffic_source_last_click RECORD contains the last-click attributed session traffic source data across Google ads and manual contexts, where available. 
+--          https://support.google.com/analytics/answer/7029846?hl=en#zippy=%2Ccollected-traffic-source%2Csession-traffic-source-last-click
+-- 2) Apply google/cpc fix
+--          Known Bug: Traffic with gclid (Google Ads click identifier) is sometimes incorrectly attributed, mislabeling paid traffic as organic or direct in the BigQuery export, causing inflated Unassigend traffic
+--          Logic applied: whenever we see gclid in the first collected_traffic_source (evrnt-level traffic source) - we will attribute that session to  Paid Total (should use Paid Total as confirmed by Ritika on 1/20/2026)
+--          If gclid is NOT present, but cross_channel_campaign still has google/cpc as sourcemedium -> also classify as Paid Total  
+-- 3) Apply custom channel grouping logic to other Unassigned sessions
+--          Logic applied: If we see Unassigned channel in the data after the fix above, we will try to apply custom channel grouping logic as has been defined preciously for SB and used by them so far
+--          We will aply the same exact logic as was used by SB before , which is to use first collected_trafic_source and analyize source/medium/camapgin using  UDF: analytics_320983557.channel_grouping_prod()
 
-SELECT event_date as date, 
-    -- cross_channel_campaign.primary_channel_group channel_group,
 
-            CASE WHEN event_date >='2024-10-09'       -- session_traffic_source_last_click first available date    
-                  THEN 
-                        CASE WHEN -- adjustment for YoutUBe video attribution
-                                    REGEXP_CONTAINS(session_traffic_source_last_click.cross_channel_campaign.campaign_name, 'GGL - YT - Video') 
-                                    THEN 'Paid Total'
-                        ELSE 
-                              session_traffic_source_last_click.cross_channel_campaign.primary_channel_group
-                        END
-                  ELSE
-                    -- session_traffic_source_last_click.cross_channel_campaign.primary_channel_group
-                        `${dataform.projectConfig.vars.OUTPUT_PROJECT}.${dataform.projectConfig.vars.REPORTING_DATASET}.channel_grouping_prod`(
-                              collected_traffic_source.manual_source, 
-                              collected_traffic_source.manual_medium,
-                              collected_traffic_source.manual_campaign_name
-                        )
+with prep as (
+
+                SELECT distinct * EXCEPT(first_cross_channel_campaign ), 
+
+                    -- Fix Unnasigned
+                    CASE WHEN first_cross_channel_campaign.primary_channel_group = 'Unassigned' 
+                    THEN CASE WHEN  (first_collected_traffic_source.gclid is not null OR                                            -- gclid present OR 
+                                    (first_cross_channel_campaign.source='google' AND first_cross_channel_campaign.medium='cpc'))   -- gclid not present and  cross_channel_campaign.source/medium='google/cpc' -> mark as Paid Total
+                              THEN  
+                                array_agg((SELECT AS STRUCT
+                                      first_cross_channel_campaign.campaign_name, 
+                                      first_cross_channel_campaign.campaign_id, 
+                                      'google' as source, 'cpc' as medium, 
+                                      first_cross_channel_campaign.source_platform, 
+                                      first_cross_channel_campaign.default_channel_group, 
+                                      'Paid Total' as primary_channel_group) --should use Paid Total as confirmed by Ritika on 1/20/2026
+                                )[safe_offset(0)]   
+
+                              ELSE -- cross_channel_campaign data is not available -  analyze first collected traffic source
+                                array_agg((SELECT AS STRUCT
+                                      first_collected_traffic_source.manual_campaign_name as campaign_name, 
+                                      first_collected_traffic_source.manual_campaign_id as campaign_id, 
+                                      first_collected_traffic_source.manual_source as source, 
+                                      first_collected_traffic_source.manual_medium as medium, 
+                                      first_collected_traffic_source.manual_source_platform as source_platform, 
+                                      first_cross_channel_campaign.default_channel_group, 
+
+                                      analytics_320983557.channel_grouping_prod(first_collected_traffic_source.manual_source,             -- and apply custom grouping logic
+                                                                                first_collected_traffic_source.manual_medium,
+                                                                                first_collected_traffic_source.manual_campaign_name)
+                                                        as primary_channel_group)
+                                )[safe_offset(0)]  
+
+                                -- leave as is
+                                -- first_cross_channel_campaign
+
+
+                              --custom attribution logic for cross_channel_campaign - NOT GOOD as a lot of those values are "data Not Available" or (not set)
+                                --     array_agg((SELECT AS STRUCT
+                                -- first_cross_channel_campaign.campaign_name, 
+                                -- first_cross_channel_campaign.campaign_id, 
+                                -- first_cross_channel_campaign.source, 
+                                -- first_cross_channel_campaign.medium, 
+                                -- first_cross_channel_campaign.source_platform, 
+                                -- first_cross_channel_campaign.default_channel_group, 
+                                -- analytics_320983557.channel_grouping_prod(first_cross_channel_campaign.source, 
+                                --                                           first_cross_channel_campaign.medium,
+                                --                                           first_cross_channel_campaign.campaign_name)
+                                --                    as primary_channel_group)
+                                -- )[safe_offset(0)]  
+                          END
+
+                    ELSE
+                        first_cross_channel_campaign
+                    END as fixed_cross_channel_campaign
+                FROM (
+
+                select  event_date, -- single row per session per date
+                        session_id, user_pseudo_id,
+                        MAX(session_engaged) session_engaged,
+                        SUM(ecommerce.purchase_revenue) as purchase_revenue,
+                        COUNT(DISTINCT ecommerce.transaction_id) transactions,
+                        ARRAY_AGG(session_traffic_source_last_click.cross_channel_campaign IGNORE NULLS ORDER BY event_timestamp ASC LIMIT 1)[SAFE_OFFSET(0)] 
+                          AS first_cross_channel_campaign  ,
+                        ARRAY_AGG(collected_traffic_source IGNORE NULLS ORDER BY event_timestamp ASC LIMIT 1)[SAFE_OFFSET(0)] 
+                          AS first_collected_traffic_source  ,
+
+
+                  FROM ${ref("base_ga4_events")}
+                    where event_date >= date_checkpoint
+                GROUP BY ALL
+
+                )
+                GROUP BY  event_date,  session_id, user_pseudo_id,first_cross_channel_campaign,session_engaged,purchase_revenue,transactions,first_collected_traffic_source
+
+
+)
+
+SELECT  event_date as date, 
+
+     CASE WHEN event_date >='2024-10-09'   -- session_traffic_source_last_click first available date    
+     THEN  
+            CASE WHEN     -- adjustment for YouTube video attribution
+                    REGEXP_CONTAINS(fixed_cross_channel_campaign.campaign_name, 'GGL - YT - Video') 
+                    THEN 'Paid Total'
+              ELSE 
+                    fixed_cross_channel_campaign.primary_channel_group
+              END 
+      ELSE      -- before  '2024-10-09' 
+                         `sallybeauty-us-ga4.gmp_reporting.channel_grouping_prod`(
+                              first_collected_traffic_source.manual_source, 
+                              first_collected_traffic_source.manual_medium,
+                              first_collected_traffic_source.manual_campaign_name)
             
       END AS channel_group,
+        count(distinct session_id) sessions,
+        count(distinct if(session_engaged=1, session_id, NULL)) engaged_sessions,
+        count(distinct user_pseudo_id) users,
+        sum(purchase_revenue) revenue,
+        sum(transactions) transactions,
 
-      count(distinct session_id) sessions,
-      count(distinct if(event_params.session_engaged=1, session_id, NULL)) engaged_sessions,
-      -- count(distinct session_info.engaged_session_id) engaged_sessions, -- this overcounts for some reason  - trobleshoot
-      count(distinct user_pseudo_id) users,
-      sum(ecommerce.purchase_revenue) revenue,
-      count(distinct ecommerce.transaction_id) transactions,
-  FROM ${ref("base_ga4_events")}
-  where event_date >= date_checkpoint
+  FROM  prep
  group by all
- having sessions>0
+having count(distinct session_id) >0
+
+
 
 -- -- SELECT session_date as date, 
 -- --         cross_channel_campaign.primary_channel_group,
