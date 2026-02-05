@@ -1,0 +1,116 @@
+config {
+  type: "operations",
+  tags: ["backfill", "prod"],
+  description: "Manually re-processing base_ga4_events to fix missing fulfillment_method from Jan 22 onwards"
+}
+
+js {
+  const { helpers } = require("includes/core/helpers");
+  const config = helpers.getConfig();
+}
+
+-- 1. Set the dates for the period that needs fixing
+DECLARE start_date DATE DEFAULT '2026-01-22';
+DECLARE end_date DATE DEFAULT '2026-02-05'; -- Adjust to today's date
+
+-- 2. Delete the rows where the fulfillment value was missing
+DELETE FROM ${ref("base_ga4_events")} 
+WHERE event_date BETWEEN start_date AND end_date;
+
+-- 3. Re-insert the rows using the raw data
+-- This will use your current config.js which now includes 'fulfillment_method'
+INSERT INTO ${ref("base_ga4_events")}
+
+WITH query_source AS (
+    SELECT
+      _table_suffix AS table_suffix,
+      *
+    -- Note: Changed from events_fresh_* to events_* as standard daily tables 
+    -- contain the finalized, re-processed data needed for a backfill.
+    FROM ${ref("events_*")}
+    WHERE 
+      parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) BETWEEN start_date AND end_date
+      AND contains_substr(_table_suffix, 'intraday') IS FALSE
+      AND contains_substr(_table_suffix, 'fresh') IS FALSE
+      
+      -- Apply standard exclusions from your config
+      AND ${helpers.generateFilterTypeFromListSQL("exclude", "event_name", config.EVENTS_TO_EXCLUDE)}
+      AND ${helpers.generateFilterTypeFromListSQL("exclude", "device.web_info.hostname", config.HOSTNAME_EXCLUDE)}
+      AND ${helpers.generateFilterTypeFromListSQL("include", "device.web_info.hostname", config.HOSTNAME_INCLUDE_ONLY)}
+),
+
+-- Standard processing steps follow the same logic as your base table
+step1 AS (
+  SELECT
+    event_timestamp,
+    event_name,
+    table_suffix,
+    parse_date('%Y%m%d', event_date) AS event_date,
+    date_diff(current_date(), cast(event_date as date format 'YYYYMMDD'), day) > ${config.DATA_IS_FINAL_DAYS} AS is_final,
+    stream_id,
+    platform,
+    struct(
+      event_timestamp,
+      timestamp_micros(event_timestamp) AS event_timestamp_utc,
+      user_first_touch_timestamp,
+      timestamp_micros(user_first_touch_timestamp) AS user_first_touch_timestamp_utc    
+    ) AS time,
+    user_pseudo_id,
+    user_id,
+    is_active_user,
+    batch_event_index,
+    batch_ordering_id,
+    batch_page_id,
+    
+    -- Struct processing
+    struct(
+      privacy_info.analytics_storage,
+      privacy_info.ads_storage,
+      privacy_info.uses_transient_token
+    ) AS privacy_info,
+    
+    struct(
+      collected_traffic_source.manual_campaign_id,
+      collected_traffic_source.manual_campaign_name,
+      collected_traffic_source.manual_source,
+      collected_traffic_source.manual_medium,
+      collected_traffic_source.manual_term,
+      collected_traffic_source.manual_content,
+      collected_traffic_source.manual_source_platform,
+      collected_traffic_source.manual_creative_format,
+      collected_traffic_source.manual_marketing_tactic,
+      collected_traffic_source.gclid,
+      collected_traffic_source.dclid,
+      collected_traffic_source.srsltid
+    ) AS collected_traffic_source,
+
+    ecommerce,
+    user_ltv,
+    device,
+    app_info,
+    geo,
+
+    -- This is where the fix happens:
+    -- Dynamic generation of parameters including your new fulfillment_method
+    ${helpers.generateStructSQL(helpers.generateParamsSQL(config.CORE_PARAMS_ARRAY))} AS event_params,
+
+    ${when(
+      config.CUSTOM_EVENT_PARAMS_ARRAY.length > 0,
+        `${helpers.generateStructSQL(helpers.generateParamsSQL(config.CUSTOM_EVENT_PARAMS_ARRAY))} AS event_params_custom,`
+      )} 
+
+    ${when(
+      config.CUSTOM_USER_PROPERTIES_ARRAY.length > 0,      
+        `${helpers.generateStructSQL(helpers.generateParamsSQL(config.CUSTOM_USER_PROPERTIES_ARRAY,'user_properties'))} AS user_properties,`
+      )}
+
+    ${helpers.generateParamSQL({type: "int", name: "session_engaged"})}
+
+  FROM query_source
+),
+
+-- Final selection to match the schema of base_ga4_events
+SELECT
+  current_timestamp() AS _run_timestamp,
+  *
+FROM step1;
