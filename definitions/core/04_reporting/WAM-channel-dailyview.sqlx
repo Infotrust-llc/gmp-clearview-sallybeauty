@@ -79,32 +79,15 @@ with prep as (
                                       first_collected_traffic_source.manual_source_platform as source_platform, 
                                       first_cross_channel_campaign.default_channel_group, 
 
-                                      analytics_320983557.channel_grouping_prod(first_collected_traffic_source.manual_source,             -- and apply custom grouping logic
+                                      ${dataform.projectConfig.vars.REPORTING_DATASET}.channel_grouping_prod(first_collected_traffic_source.manual_source,             -- and apply custom grouping logic
                                                                                 first_collected_traffic_source.manual_medium,
                                                                                 first_collected_traffic_source.manual_campaign_name)
                                                         as primary_channel_group)
                                 )[safe_offset(0)]  
 
-                                -- leave as is
-                                -- first_cross_channel_campaign
-
-
-                              --custom attribution logic for cross_channel_campaign - NOT GOOD as a lot of those values are "data Not Available" or (not set)
-                                --     array_agg((SELECT AS STRUCT
-                                -- first_cross_channel_campaign.campaign_name, 
-                                -- first_cross_channel_campaign.campaign_id, 
-                                -- first_cross_channel_campaign.source, 
-                                -- first_cross_channel_campaign.medium, 
-                                -- first_cross_channel_campaign.source_platform, 
-                                -- first_cross_channel_campaign.default_channel_group, 
-                                -- analytics_320983557.channel_grouping_prod(first_cross_channel_campaign.source, 
-                                --                                           first_cross_channel_campaign.medium,
-                                --                                           first_cross_channel_campaign.campaign_name)
-                                --                    as primary_channel_group)
-                                -- )[safe_offset(0)]  
                           END
 
-                    ELSE
+                    ELSE    -- leave as is
                         first_cross_channel_campaign
                     END as fixed_cross_channel_campaign
                 FROM (
@@ -126,8 +109,6 @@ with prep as (
 
                 )
                 GROUP BY  event_date,  session_id, user_pseudo_id,first_cross_channel_campaign,session_engaged,purchase_revenue,transactions,first_collected_traffic_source
-
-
 )
 
 SELECT  event_date as date, 
@@ -141,7 +122,7 @@ SELECT  event_date as date,
                     fixed_cross_channel_campaign.primary_channel_group
               END 
       ELSE      -- before  '2024-10-09' 
-                         `sallybeauty-us-ga4.gmp_reporting.channel_grouping_prod`(
+                         `${dataform.projectConfig.vars.REPORTING_DATASET}.channel_grouping_prod`(
                               first_collected_traffic_source.manual_source, 
                               first_collected_traffic_source.manual_medium,
                               first_collected_traffic_source.manual_campaign_name)

@@ -20,13 +20,13 @@ js {
 
 }
 
-DECLARE start_date DATE DEFAULT '2026-01-22';
-DECLARE end_date DATE DEFAULT '2026-02-05';
+DECLARE start_date DATE DEFAULT '2026-01-23';
+DECLARE end_date DATE DEFAULT '2026-01-23';
 
 
 
 DELETE FROM  ${ref("base_ga4_events")} WHERE event_date between start_date and end_date;
-INSERT INTO  ${ref("base_ga4_events")}
+INSERT INTO  ${ref("base_ga4_events")} (
 
 with query_source as (
 
@@ -594,10 +594,12 @@ add_row_numbers as (
 
 
 select
-  current_timestamp() as _run_timestamp, -- indicates when the row was last run
+  current_timestamp() as _run_timestamp,
   *
 from add_row_numbers
-where true
+where true 
+)
+
 
 
 
