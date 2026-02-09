@@ -31,8 +31,9 @@ js {
 pre_operations {
   -- declare params string default (${json_custom_params}); 
   declare date_checkpoint DATE;
+  -- set  date_checkpoint = "2026-01-22";
   -- set @@query_label = "${helpers.executionLabels()}";
-  set date_checkpoint = (
+   date_checkposetint = (
     ${when(incremental(),
       `select 
         coalesce(max(event_date)+1, date('${config.GA4_START_DATE}'))
