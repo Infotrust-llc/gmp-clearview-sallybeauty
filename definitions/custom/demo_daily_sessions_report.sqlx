@@ -79,7 +79,7 @@ with sessions_aggregation as (
      
     
     from ${ref("ga4_sessions")} s
-    left join ${ref("ga4_events")} e
+    left join ${ref("base_ga4_events")} e
         on s.session_id = e.session_id
         and e.event_name in (
         'page_view',
