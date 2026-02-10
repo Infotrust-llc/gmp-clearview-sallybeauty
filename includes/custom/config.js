@@ -466,7 +466,7 @@ const customConfig = {
   //    { name: "lifetime_value",   type: "decimal" }
   // ],
 CUSTOM_USER_PROPERTIES_ARRAY: [
-{
+  {
         "name": "customer_id",
         "type": "STRING"
       },
