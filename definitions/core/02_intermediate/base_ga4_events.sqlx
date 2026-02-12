@@ -6,6 +6,7 @@
 
 config {
   type: "incremental",
+  onSchemaChange: "IGNORE",
   tags: [dataform.projectConfig.vars.GA4_DATASET,"base_events","prod"],
   description: "Output events table: unnested, cleaned, clustered data with several fixes",
   database: dataform.projectConfig.vars.OUTPUT_PROJECT,
@@ -33,7 +34,7 @@ pre_operations {
   declare date_checkpoint DATE;
   -- set  date_checkpoint = "2026-01-22";
   -- set @@query_label = "${helpers.executionLabels()}";
-   date_checkposetint = (
+   set date_checkpoint = (
     ${when(incremental(),
       `select 
         coalesce(max(event_date)+1, date('${config.GA4_START_DATE}'))
