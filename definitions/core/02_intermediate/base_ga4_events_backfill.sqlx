@@ -6,7 +6,7 @@
 
 config {
   type: "operations",
-  tags: [dataform.projectConfig.vars.GA4_DATASET,"base_events","prod"],
+  tags: [dataform.projectConfig.vars.GA4_DATASET,"base_events","dev"],
 
     //  database: dataform.projectConfig.vars.OUTPUT_PROJECT,
     //  schema: dataform.projectConfig.vars.TRANSFORMATIONS_DATASET,
