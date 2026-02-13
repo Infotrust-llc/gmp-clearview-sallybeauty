@@ -471,7 +471,10 @@ const customConfig = {
       {
         "name": "vsu_step_number",
         "type": "STRING"
-      }],
+      },
+            {"name": "timer", "type": "STRING" },
+      {"name":"remember_me_selected","type":"string"},
+      {"name":"cc_value","type":"string"}],
 
   // user properties
   // example:
