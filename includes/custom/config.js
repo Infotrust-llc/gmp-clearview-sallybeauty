@@ -460,7 +460,8 @@ const customConfig = {
       },
      {"name": "timer", "type": "STRING" },
       {"name":"remember_me_selected","type":"string"},
-      {"name":"cc_value","type":"string"}
+      {"name":"cc_value","type":"string"},
+    {"name": "item_id","type":"string"}
 ],
 
   // user properties
