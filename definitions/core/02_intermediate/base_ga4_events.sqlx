@@ -6,6 +6,7 @@
 
 config {
   type: "incremental",
+  onSchemaChange: 'EXTEND',
   tags: [dataform.projectConfig.vars.GA4_DATASET,"base_events","prod"],
   description: "Output events table: unnested, cleaned, clustered data with several fixes",
   database: dataform.projectConfig.vars.OUTPUT_PROJECT,

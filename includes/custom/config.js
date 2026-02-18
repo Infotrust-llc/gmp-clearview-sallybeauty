@@ -90,12 +90,12 @@ CUSTOM_USER_PROPERTIES_ARRAY: [
   // (this does NOT support the "type" key: only strings are supported)
 
   // Examples based on internal search engine params:
-  //   CUSTOM_URL_PARAMS_ARRAY: [
-  //      { name: "q", cleaningMethod: lowerSQL },
-  //      { name: "s", cleaningMethod: lowerSQL },
-  //      { name: "search",cleaningMethod: lowerSQL }
-  //   ],
-  CUSTOM_URL_PARAMS_ARRAY: [],
+    CUSTOM_URL_PARAMS_ARRAY: [
+       { name: "q", cleaningMethod: lowerSQL },
+       { name: "s", cleaningMethod: lowerSQL },
+       { name: "search",cleaningMethod: lowerSQL }
+    ],
+//   CUSTOM_URL_PARAMS_ARRAY: [],
 
   // filters
   // array: list the event names you want to exclude from the events table 
