@@ -24,7 +24,7 @@ js {
 
 /* incrementality */
 pre_operations {
-  declare date_checkpoint DATE;
+  declare date_checkpoint DATE ;
 --   set @@query_label = "${helpers.executionLabels()}";
   set date_checkpoint = (
     ${when(incremental(),
@@ -51,14 +51,42 @@ pre_operations {
 --          Logic applied: If we see Unassigned channel in the data after the fix above, we will try to apply custom channel grouping logic as has been defined preciously for SB and used by them so far
 --          We will aply the same exact logic as was used by SB before , which is to use first collected_trafic_source and analyize source/medium/camapgin using  UDF: analytics_320983557.channel_grouping_prod()
 
+with  cart_split_sessions as (
+  SELECT distinct session_id
+    -- event_date, session_id, user_pseudo_id, session_traffic_source_last_click.cross_channel_campaign, 
+    -- count(distinct session_id) sesions, 
+    -- string_agg( event_name order by event_timestamp, batch.batch_event_index) ,
+    -- string_agg(distinct session_traffic_source_last_click.cross_channel_campaign.medium ) other_channel_indicators ,
+      
+ FROM `sallybeauty-us-ga4.gmp_base.base_ga4_events` WHERE event_date between "2026-02-12" and '2026-03-03'
+ and session_traffic_source_last_click.cross_channel_campaign.primary_channel_group='Unassigned'
+group by all
+having  string_agg( event_name order by event_timestamp, batch.batch_event_index) like '%cart_split%'
+and  string_agg( event_name order by event_timestamp, batch.batch_event_index)  not like '%session_start%'
+-- and ARRAY_AGG(event_params_custom.page_type IGNORE NULLS ORDER BY event_timestamp ASC LIMIT 1)[SAFE_OFFSET(0)] <>'product'
 
-with prep as (
+)
+, prep as (
 
-                SELECT distinct * EXCEPT(first_cross_channel_campaign ), 
+                SELECT distinct *, --EXCEPT(first_cross_channel_campaign ), 
 
                     -- Fix Unnasigned
                     CASE WHEN first_cross_channel_campaign.primary_channel_group = 'Unassigned' 
-                    THEN CASE WHEN  (first_collected_traffic_source.gclid is not null OR                                            -- gclid present OR 
+                    THEN CASE 
+                            -- FIRST Eliminate Cart split sessions: have cart_split event, do not have session_start event, and first page is PDP, sessions between "2026-02-12" and '2026-03-03'
+                              WHEN session_id in (select * from cart_split_sessions) and first_page_type='product'
+                              THEN
+                                   array_agg((SELECT AS STRUCT
+                                      first_cross_channel_campaign.campaign_name, 
+                                      first_cross_channel_campaign.campaign_id, 
+                                      first_cross_channel_campaign.source as source, 
+                                      first_cross_channel_campaign.medium as medium, 
+                                      first_cross_channel_campaign.source_platform, 
+                                      first_cross_channel_campaign.default_channel_group, 
+                                      'Paid Total' as primary_channel_group)                                                        -- worngly attributed Cart split sessions, should be Paid Total instead of Direct - directed by Ritika 3/4/2026
+                                )[safe_offset(0)] 
+
+                              WHEN  (first_collected_gclid  is not null OR first_collected_gbraid is not null   OR
                                     (first_cross_channel_campaign.source='google' AND first_cross_channel_campaign.medium='cpc'))   -- gclid not present and  cross_channel_campaign.source/medium='google/cpc' -> mark as Paid Total
                               THEN  
                                 array_agg((SELECT AS STRUCT
@@ -68,6 +96,30 @@ with prep as (
                                       first_cross_channel_campaign.source_platform, 
                                       first_cross_channel_campaign.default_channel_group, 
                                       'Paid Total' as primary_channel_group) --should use Paid Total as confirmed by Ritika on 1/20/2026
+                                )[safe_offset(0)] 
+
+                              WHEN  (first_collected_msclkid  is not null OR                                                      --   msclkid is present
+                                    (first_cross_channel_campaign.source='bing' AND first_cross_channel_campaign.medium='cpc'))   -- msclkid  not present and  cross_channel_campaign.source/medium='bing/cpc' -> mark as Paid Total
+                              THEN  
+                                array_agg((SELECT AS STRUCT
+                                      first_cross_channel_campaign.campaign_name, 
+                                      first_cross_channel_campaign.campaign_id, 
+                                      'bing' as source, 'cpc' as medium, 
+                                      first_cross_channel_campaign.source_platform, 
+                                      first_cross_channel_campaign.default_channel_group, 
+                                      'Paid Total' as primary_channel_group)                                                         --should use Paid Total as confirmed by Ritika on 1/20/2026
+                                )[safe_offset(0)]   
+                                
+                              -- srsltid present -  Google Merchant Center -- Organic Shopping
+                              WHEN  (first_collected_srsltid is not null)
+                              THEN  
+                                array_agg((SELECT AS STRUCT
+                                      first_cross_channel_campaign.campaign_name, 
+                                      first_cross_channel_campaign.campaign_id, 
+                                      'google' as source, 'organic' as medium, 
+                                      first_cross_channel_campaign.source_platform, 
+                                      first_cross_channel_campaign.default_channel_group, 
+                                      'Organic Shopping' as primary_channel_group) --should use Organic Shopping as confirmed by Hong on 3/9/2026
                                 )[safe_offset(0)]   
 
                               ELSE -- cross_channel_campaign data is not available -  analyze first collected traffic source
@@ -102,13 +154,26 @@ with prep as (
                         ARRAY_AGG(collected_traffic_source IGNORE NULLS ORDER BY event_timestamp ASC LIMIT 1)[SAFE_OFFSET(0)] 
                           AS first_collected_traffic_source  ,
 
+                        -- -First page_view
+                        ARRAY_AGG(event_params_custom.page_type IGNORE NULLS ORDER BY event_timestamp ASC LIMIT 1)[SAFE_OFFSET(0)]  as first_page_type,
+                        ARRAY_AGG(page.location IGNORE NULLS ORDER BY event_timestamp ASC LIMIT 1)[SAFE_OFFSET(0)]  as first_page,
+
+                        -- click ids
+                          ARRAY_AGG(click_ids.gclid IGNORE NULLS ORDER BY event_timestamp ASC, batch.batch_event_index LIMIT 1)[SAFE_OFFSET(0)] 
+                          AS first_collected_gclid  ,
+                          ARRAY_AGG(click_ids.gbraid IGNORE NULLS ORDER BY event_timestamp ASC, batch.batch_event_index LIMIT 1)[SAFE_OFFSET(0)] 
+                          AS first_collected_gbraid  , --replacea gclid for in app campaigns
+                          ARRAY_AGG(click_ids.srsltid IGNORE NULLS ORDER BY event_timestamp ASC, batch.batch_event_index ASC LIMIT 1)[SAFE_OFFSET(0)] 
+                          AS first_collected_srsltid ,
+                          ARRAY_AGG(click_ids.msclkid IGNORE NULLS ORDER BY event_timestamp ASC, batch.batch_event_index LIMIT 1)[SAFE_OFFSET(0)] 
+                          AS first_collected_msclkid  ,
 
                   FROM ${ref("base_ga4_events")}
-                    where event_date >= date_checkpoint
+                    where event_date >=  date_checkpoint
                 GROUP BY ALL
 
                 )
-                GROUP BY  event_date,  session_id, user_pseudo_id,first_cross_channel_campaign,session_engaged,purchase_revenue,transactions,first_collected_traffic_source
+                GROUP BY  all --event_date,  session_id, user_pseudo_id,first_cross_channel_campaign,session_engaged,purchase_revenue,transactions,first_collected_traffic_source
 )
 
 SELECT  event_date as date, 
