@@ -6,11 +6,11 @@ WHEN ((REGEXP_CONTAINS(tsource, r'^(google|bing)$') AND REGEXP_CONTAINS(medium, 
             OR REGEXP_CONTAINS(tsource, r'^((unlinked SA360 account))$') 
             OR REGEXP_CONTAINS(medium, r'^((unlinked SA360 account))$')) 
             AND NOT REGEXP_CONTAINS(lower(campaign), r'^(pla|.*performance.max.*|.*performance.max.*|.*pmax.*)$') 
-            then 'Paid Search'
+            then 'Paid Total'
 -------****Paid Shopping(PLA)*****--------
-when  regexp_contains(campaign, r'^pla|.*performance.max.*|.*performance.max.*|.*pmax.*$' ) --r'^(.*PLA.*)$'
+when  regexp_contains(campaign, r'^pla|.*performance.max.*|.*performance.max.*|.*pmax.*|GGL.*$' ) --r'^(.*PLA.*)$'
             and medium = 'cpc' 
-            then 'Paid Shopping (PLA)'
+            then 'Paid Total'
 ------*****Perfomance Max*****----
 -- when regexp_contains(campaign, r'^(.*performance.max.*|.*Performance.Max.*|.*pmax.*)$') then 'Perfomance Max'
 -------*****App****--------
