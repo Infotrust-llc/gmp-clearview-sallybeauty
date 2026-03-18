@@ -93,7 +93,7 @@ const generateTransactionsDedupeSQL = (tf) => {
  */
 const generateParamSQL = (config, column = "event_params") => {
   let value = "";
-  let config_type = lower(config.type);
+  let config_type = config.type.toLowerCase();
   if (config_type === "decimal") {
     value = `coalesce(
             safe_cast((select value.int_value from unnest(${column}) where key = '${config.name}') as numeric),
