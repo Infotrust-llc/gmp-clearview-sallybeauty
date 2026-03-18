@@ -93,17 +93,18 @@ const generateTransactionsDedupeSQL = (tf) => {
  */
 const generateParamSQL = (config, column = "event_params") => {
   let value = "";
-  if (config.type === "decimal") {
+  let config_type = lower(config.type);
+  if (config_type === "decimal") {
     value = `coalesce(
             safe_cast((select value.int_value from unnest(${column}) where key = '${config.name}') as numeric),
             safe_cast((select value.double_value from unnest(${column}) where key = '${config.name}') as numeric),
             safe_cast((select value.float_value  from unnest(${column}) where key = '${config.name}') as numeric)
           ) `;
-  } else if (config.type === "string") {
+  } else if (config_type === "string") {
     value = `
           (select coalesce(value.string_value, cast(value.int_value as string), cast(value.float_value as string), cast(value.double_value as string) ) from unnest(${column}) where key = '${config.name}') `;
   } else {
-    value = `(select value.${config.type}_value from unnest(${column}) where key = '${config.name}') `;
+    value = `(select value.${config_type}_value from unnest(${column}) where key = '${config.name}') `;
   }
   value = config.cleaningMethod ? config.cleaningMethod(value) : value;
   return `${value} as ${config.renameTo ? config.renameTo : config.name}`;
