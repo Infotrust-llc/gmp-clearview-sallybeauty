@@ -30,7 +30,7 @@ js {
 /* incrementality */
 pre_operations {
   -- declare params string default (${json_custom_params}); 
-  -- declare date_checkpoint DATE;
+  declare date_checkpoint DATE;
 -- set  date_checkpoint = "2026-03-17";
   -- set @@query_label = "${helpers.executionLabels()}";
   set date_checkpoint = (
