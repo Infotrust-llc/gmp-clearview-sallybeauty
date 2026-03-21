@@ -34,6 +34,7 @@ js {
 pre_operations {
   -- declare params string default (${json_custom_params}); 
   declare date_checkpoint DATE;
+    -- set  date_checkpoint = "2026-03-17";
   -- set @@query_label = "${helpers.executionLabels()}";
   set date_checkpoint = (
     ${when(incremental(),
@@ -44,11 +45,17 @@ pre_operations {
     `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
   );
     -- delete some older data, since this may be updated later by GA4
+  --               ${
+  --   when(incremental(),
+  --      `delete from ${self()} where event_date between '2024-11-04' and '2026-01-22' `
+  --     )
+  -- }
   ${
     when(incremental(),
       `delete from ${self()} where event_date >= date_checkpoint`
       )
   }
+
 }
 
 with query_source as (
@@ -63,7 +70,7 @@ with query_source as (
     -- incrementality clause
     and parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) >= date_checkpoint 
     --  and parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) <= '2024-11-02' 
-    --  and _table_suffix between '20241001' and '20241103'
+    --  and _table_suffix between '20241104' and '20260122'
     
     -- filters go here
 
