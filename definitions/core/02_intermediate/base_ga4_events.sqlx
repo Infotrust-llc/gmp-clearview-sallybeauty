@@ -42,6 +42,7 @@ pre_operations {
       `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
   );
     -- delete some older data, since this may be updated later by GA4
+          --  `delete from ${self()} where event_date between '2024-10-01' and '2024-11-03' `
   ${
     when(incremental(),
       `delete from ${self()} where event_date >= date_checkpoint`
@@ -60,7 +61,7 @@ with query_source as (
 
     -- incrementality clause
     and parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) >= date_checkpoint
-        -- and _table_suffix between '20241001' and '20241105'
+        -- and _table_suffix between '20241001' and '20241103'
     -- filters go here
 
     -- intraday filter: exclude
@@ -350,8 +351,8 @@ step3 as (
       coalesce(event_params.ga_session_id, 0) ||
       coalesce(batch.batch_page_id, 0) ||
       coalesce(batch.batch_ordering_id,0) ||
-      coalesce(batch.batch_event_index,0) ||
-      coalesce(event_params.engagement_time_msec, 0)
+      coalesce(batch.batch_event_index,0) 
+    --   coalesce(event_params.engagement_time_msec, 0)
     ) as event_id,
     *,
     -- standard url parameters from config
