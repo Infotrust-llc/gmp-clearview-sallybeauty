@@ -33,6 +33,8 @@ pre_operations {
   -- declare params string default (${json_custom_params}); 
   declare date_checkpoint DATE;
   -- set @@query_label = "${helpers.executionLabels()}";
+  --  set date_checkpoint = "2024-11-06";
+
   set date_checkpoint = (
     ${when(incremental(),
       `select 
@@ -42,9 +44,11 @@ pre_operations {
       `select date('${config.GA4_START_DATE}')`)}   /* the default, when it's not incremental */
   );
     -- delete some older data, since this may be updated later by GA4
-  ${
+          -- `delete from ${self()} where event_date >= date_checkpoint`
+          --  `delete from ${self()} where event_date between '2024-10-01' and '2024-11-05' `
+          
     when(incremental(),
-      `delete from ${self()} where event_date >= date_checkpoint`
+        `delete from ${self()} where event_date >= date_checkpoint`
       )
   }
 }
@@ -350,8 +354,8 @@ step3 as (
       coalesce(event_params.ga_session_id, 0) ||
       coalesce(batch.batch_page_id, 0) ||
       coalesce(batch.batch_ordering_id,0) ||
-      coalesce(batch.batch_event_index,0) ||
-      coalesce(event_params.engagement_time_msec, 0)
+      coalesce(batch.batch_event_index,0) 
+      -- coalesce(event_params.engagement_time_msec, 0)
     ) as event_id,
     *,
     -- standard url parameters from config
