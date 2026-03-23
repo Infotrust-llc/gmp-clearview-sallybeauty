@@ -47,7 +47,7 @@ pre_operations {
           -- `delete from ${self()} where event_date >= date_checkpoint`
           --  `delete from ${self()} where event_date between '2024-10-01' and '2024-11-05' `
           
-    when(incremental(),
+    ${when(incremental(),
         `delete from ${self()} where event_date >= date_checkpoint`
       )
   }
