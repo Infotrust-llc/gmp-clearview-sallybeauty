@@ -142,7 +142,10 @@ const customConfig = {
 {"name":"sort_type_selected","type":"string"},
 {"name":"use_shipping_address","type":"string"},
 {"name":"sub_value","type":"string"},
-{"name":"cta_name","type":"string"}
+{"name":"cta_name","type":"string"},
+{"name": "shipping_discount","type":"string"},
+{"name": "delivery_discount","type":"string"},
+{"name": "bopis_discount","type":"string"}
 ],
 
   // user properties
