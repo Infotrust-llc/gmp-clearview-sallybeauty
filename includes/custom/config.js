@@ -160,7 +160,10 @@ const customConfig = {
       {"name": "nav_click_text","type":"string"},
       {"name": "nav_menu_level","type":"string"},
       {"name": "nav_menu_type","type":"string"},
-      {"name": "sort_selected","type":"string"}
+      {"name": "sort_selected","type":"string"},
+      {"name": "shipping_discount","type":"string"},
+      {"name": "delivery_discount","type":"string"},
+      {"name": "bopis_discount","type":"string"}
       
       ],
       
