@@ -46,11 +46,11 @@ pre_operations {
   );
 
     -- delete some older data, since this may be updated later by GA4
-     -- ${
-  --   when(incremental(),
-  --      `delete from ${self()} where event_date >= date_checkpoint`
-  --     )
-  -- }
+  --       `delete from ${self()} where event_date between '2024-10-01' and '2024-10-08' `
+     ${when(incremental(),
+    `delete from ${self()} where event_date >= date_checkpoint`
+      )
+  }
 }
 
 with query_source as (
@@ -64,7 +64,7 @@ with query_source as (
 
     -- incrementality clause
      and parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) >= date_checkpoint 
-      --  and _table_suffix between '20241106' and '20260122'
+      --  and _table_suffix between '20241001' and '20241008'
     
     -- filters go here
 
