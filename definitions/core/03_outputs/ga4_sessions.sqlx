@@ -13,7 +13,7 @@ config {
   tags:[dataform.projectConfig.vars.GA4_DATASET,"sessions","prod"],
   bigquery: {
     partitionBy: "session_date",
-    clusterBy: [ "session_id" ],
+    clusterBy: ["session_id"],
     labels: require("includes/core/helpers.js").helpers.storageLabels()
   },
 }
@@ -26,7 +26,6 @@ js {
 /* incrementality */
 pre_operations {
   declare date_checkpoint DATE;
---   set @@query_label = "${helpers.executionLabels()}";
   set date_checkpoint = (
     ${when(incremental(),
       `select coalesce(max(session_date)+1, date('${config.GA4_START_DATE}'))
