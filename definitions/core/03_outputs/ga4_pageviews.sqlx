@@ -148,7 +148,7 @@ SELECT
 FROM
   ${ref("base_ga4_events")}
 WHERE  event_date >= date_checkpoint 
-  AND event_name = 'page_view'
+  AND event_name in ('page_view',"screen_view")
 -- only hits with user_pseudo_id and session_id
   -- and user_pseudo_id is not null
   -- and session_id is not null
