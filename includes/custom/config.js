@@ -168,7 +168,8 @@ const customConfig = {
       {"name": "sort_selected","type":"string"},
       {"name": "shipping_discount","type":"string"},
       {"name": "delivery_discount","type":"string"},
-      {"name": "bopis_discount","type":"string"}
+      {"name": "bopis_discount","type":"string"},
+      {"name": "site_affiliation","type":"string"}
 ],
 
   // user properties
