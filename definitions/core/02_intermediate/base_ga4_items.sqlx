@@ -72,6 +72,8 @@ with query_source as (
     and contains_substr(_table_suffix, 'intraday') is false
     -- fresh filter: exclude
     and contains_substr(_table_suffix, 'fresh') is false
+    -- test filter: exclude
+    and contains_substr(_table_suffix, 'test') is false
 
     -- filters from config:
     -- discard unwanted events

@@ -62,7 +62,7 @@ with query_source as (
     where true
 
     -- incrementality clause
-    and parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) >= date_checkpoint
+    and safe.parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) >= date_checkpoint
     --   and _table_suffix between '20241001' and '20241008'
      
     -- filters go here
@@ -71,6 +71,8 @@ with query_source as (
     and contains_substr(_table_suffix, 'intraday') is false
     -- fresh filter: exclude
     and contains_substr(_table_suffix, 'fresh') is false
+    -- test filter: exclude
+    and contains_substr(_table_suffix, 'test') is false
 
     -- filters from config:
     -- discard unwanted events
@@ -92,8 +94,8 @@ step1 as (
     event_timestamp,
     event_name,
     table_suffix,
-    parse_date('%Y%m%d', event_date) as event_date, -- partition column
-    date_diff(current_date(), cast(event_date as date format 'YYYYMMDD'), day) > ${config.DATA_IS_FINAL_DAYS} as is_final, -- used for incrementality
+    safe.parse_date('%Y%m%d', event_date) as event_date, -- partition column
+    date_diff(current_date(), safe_cast(event_date as date format 'YYYYMMDD'), day) > ${config.DATA_IS_FINAL_DAYS} as is_final, -- used for incrementality
     stream_id,
     platform,
     struct(
