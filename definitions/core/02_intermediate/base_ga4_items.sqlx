@@ -63,7 +63,7 @@ with query_source as (
     where true
 
     -- incrementality clause
-     and parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) >= date_checkpoint 
+     and safe.parse_date('%Y%m%d', regexp_extract(_table_suffix,'[0-9]+')) >= date_checkpoint 
       --  and _table_suffix between '20241001' and '20241008'
     
     -- filters go here
@@ -96,9 +96,9 @@ step1 as (
     event_timestamp,
 
     event_name,
-    parse_date('%Y%m%d', event_date) as event_date, -- partition column
+    safe.parse_date('%Y%m%d', event_date) as event_date, -- partition column
     date(datetime(timestamp_micros(event_timestamp), '${dataform.projectConfig.vars.LOCAL_TIMEZONE}')) as event_date_local,
-    date_diff(current_date(), cast(event_date as date format 'YYYYMMDD'), day) > ${config.DATA_IS_FINAL_DAYS} as is_final, -- used for incrementality
+    date_diff(current_date(), safe_cast(event_date as date format 'YYYYMMDD'), day) > ${config.DATA_IS_FINAL_DAYS} as is_final, -- used for incrementality
     stream_id,
     platform,
     struct(
