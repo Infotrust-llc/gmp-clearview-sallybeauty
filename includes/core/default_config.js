@@ -569,7 +569,7 @@ const GA4_START_DATE = "2025-07-01";
 
 // how many days should pass in order to deem an event 'final'
 // we recommend using 3 as Measurement Protocol hits can arrive 72 hours into the past
-const DATA_IS_FINAL_DAYS = 3;
+const DATA_IS_FINAL_DAYS = 1;
 
 // adjust your lookback window
 const LAST_NON_DIRECT_LOOKBACK_DAYS = 90;
