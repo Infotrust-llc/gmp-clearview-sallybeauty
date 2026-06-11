@@ -116,7 +116,7 @@ with prep as (
 
 SELECT  event_date as date, 
 
-     CASE WHEN event_date >='2024-10-09'   -- session_traffic_source_last_click first available date    
+     CASE WHEN event_date >='2024-11-06'   -- session_traffic_source_last_click first available date    
      THEN  
             CASE WHEN     -- adjustment for YouTube video attribution
                     REGEXP_CONTAINS(fixed_cross_channel_campaign.campaign_name, 'GGL - YT - Video') 
