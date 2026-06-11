@@ -26,6 +26,7 @@ js {
 pre_operations {
   declare date_checkpoint DATE;
 --   set @@query_label = "${helpers.executionLabels()}";
+    -- set date_checkpoint = "2026-04-17";
   set date_checkpoint = (
     ${when(incremental(),
       `select coalesce(max(date) - ${config.DATA_IS_FINAL_DAYS}, date('${config.GA4_START_DATE}')) from ${self()}`,
@@ -38,7 +39,6 @@ pre_operations {
       )
   }
 }
-
 
 -- THIS IS a MASTER Channel grouping query, that is hybrid of Google recommended approachaand custom  logic
 -- ***  DO NOT USE THIS LOGIC PRIOR TO 2024-01-09, as "session_traffic_source_last_click" object was not available before that date.  *** --
@@ -125,7 +125,7 @@ SELECT  event_date as date,
                     fixed_cross_channel_campaign.primary_channel_group
               END 
       ELSE      -- before  '2024-10-09' 
-                         `${dataform.projectConfig.vars.REPORTING_DATASET}.channel_grouping_prod`(
+                         `cosmoprof-us-ga4-web.gmp_reporting.channel_grouping_prod_cosmo`(
                               first_collected_traffic_source.manual_source, 
                               first_collected_traffic_source.manual_medium,
                               first_collected_traffic_source.manual_campaign_name)
