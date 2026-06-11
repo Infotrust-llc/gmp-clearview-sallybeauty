@@ -47,11 +47,11 @@ when medium = 'pr'
  ---------***Artificial Intelligence***------------
 when regexp_contains(tsource, r"chatgpt\.com|gemini\.google\.com|perplexity|Perplexity")
     then 'Artificial Intelligence'
--------*****Organic Shopping****---------
+-------*****Organic Shopping****---------Combined with Organic Search per Ritika's request April 2026
 when regexp_contains(lower(tsource), r'^(igshopping|.*amazon.*)') 
     or regexp_contains(medium, r'^(.*shop.*)$') 
      or regexp_contains(campaign, r'^(.*shop.*)$') 
-            then 'Organic Shopping'
+            then 'Organic Search'
 ------*****Organic Social****--------
  when regexp_contains(tsource, r'^.*(twitter|t\.co|facebook|instagram|linkedin|lnkd\.in|pinterest|reddit|tiktok|yelp|snapchat).*') 
             or regexp_contains(medium, r'^(social|social_advertising|social-advertising|social_network|social-network|social_media|social-media|sm|social-unpaid|social_unpaid)$') 

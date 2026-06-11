@@ -119,7 +119,7 @@ and  string_agg( event_name order by event_timestamp, batch.batch_event_index)  
                                       'google' as source, 'organic' as medium, 
                                       first_cross_channel_campaign.source_platform, 
                                       first_cross_channel_campaign.default_channel_group, 
-                                      'Organic Shopping' as primary_channel_group) --should use Organic Shopping as confirmed by Hong on 3/9/2026
+                                      'Organic Search' as primary_channel_group) --Organic Shopping combined with Organic Search per Ritika's request April 2026 | should use Organic Shopping as confirmed by Hong on 3/9/2026
                                 )[safe_offset(0)]   
 
                               ELSE -- cross_channel_campaign data is not available -  analyze first collected traffic source
