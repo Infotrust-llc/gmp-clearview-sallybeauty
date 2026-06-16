@@ -44,7 +44,8 @@ pre_operations {
 SELECT
   event_date AS date, 
   lower(event_params_custom.fulfillment_method) as order_fulfillment,
-  sum(ecommerce.purchase_revenue_in_usd) as revenue,
+  --sum(ecommerce.purchase_revenue_in_usd) as revenue,
+  SUM(ecommerce.purchase_revenue)   - IFNULL(SUM(ecommerce.shipping_value), 0)   - IFNULL(SUM(ecommerce.tax_value), 0) AS revenue, -- 6/26/26 Revenue should exclude shipping and tax per Elvis
   count(ecommerce.transaction_id) as orders,
 
 FROM ${ref("base_ga4_events")}
