@@ -93,7 +93,7 @@ pre_operations {
                                       first_collected_traffic_source.manual_source_platform as source_platform, 
                                       first_cross_channel_campaign.default_channel_group, 
 
-                                      `sallybeauty-us-ga4.gmp_reporting.channel_grouping_prod`(first_collected_traffic_source.manual_source,             -- and apply custom grouping logic
+                                      `${dataform.projectConfig.vars.REPORTING_DATASET}.channel_grouping_prod`(first_collected_traffic_source.manual_source,             -- and apply custom grouping logic
                                                                                 first_collected_traffic_source.manual_medium,
                                                                                 first_collected_traffic_source.manual_campaign_name)
                                                         as primary_channel_group)
@@ -137,7 +137,7 @@ SELECT  event_date as date,
                     fixed_cross_channel_campaign.primary_channel_group
               END 
       ELSE      -- before  '2024-10-09' 
-                         `sallybeauty-us-ga4.gmp_reporting.channel_grouping_prod`(
+                         `${dataform.projectConfig.vars.REPORTING_DATASET}.channel_grouping_prod`(
                               first_collected_traffic_source.manual_source, 
                               first_collected_traffic_source.manual_medium,
                               first_collected_traffic_source.manual_campaign_name)
