@@ -23,7 +23,7 @@ js {
 
 /* incrementality */
 pre_operations {
-  declare date_checkpoint ; --DATE DEFAULT DATE(2026,6, 7 );
+  declare date_checkpoint DATE  ; --DEFAULT DATE(2026,6, 7 );
 --   set @@query_label = "${helpers.executionLabels()}";
   set date_checkpoint = (
     ${when(incremental(),
