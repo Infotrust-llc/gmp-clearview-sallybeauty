@@ -23,7 +23,7 @@ js {
 
 /* incrementality */
 pre_operations {
-  declare date_checkpoint DATE;
+  declare date_checkpoint ; --DATE DEFAULT DATE(2026,6, 7 );
 --   set @@query_label = "${helpers.executionLabels()}";
   set date_checkpoint = (
     ${when(incremental(),
@@ -110,7 +110,11 @@ pre_operations {
                         session_id, user_pseudo_id,
                         MAX(session_engaged) session_engaged,
                         --SUM(ecommerce.purchase_revenue) as purchase_revenue,
-                        SUM(ecommerce.purchase_revenue)   - IFNULL(SUM(ecommerce.shipping_value), 0)   - IFNULL(SUM(ecommerce.tax_value), 0) AS purchase_revenue, -- 6/26/26 Revenue should exclude shipping and tax per Elvis
+                        
+                        -- FIX: for whatever reason App property collects shipping and tax for various events, not only purchase/in_app_purcase; this causes inflation in shipping and tax numbers and therefore total revenue is too low. AZ 6/18/2026
+                        -- SUM(ecommerce.purchase_revenue)   - IFNULL(SUM(ecommerce.shipping_value), 0)   - IFNULL(SUM(ecommerce.tax_value), 0) AS purchase_revenue, -- 6/26/26 Revenue should exclude shipping and tax per Elvis
+                        SUM(IF (event_name IN ('purchase', 'in_app_purchase'), ecommerce.purchase_revenue - IFNULL( ecommerce.shipping_value, 0) - IFNULL(ecommerce.tax_value, 0) , 0)) purchase_revenue, 
+
                         COUNT(DISTINCT ecommerce.transaction_id) transactions,
                         ARRAY_AGG(session_traffic_source_last_click.cross_channel_campaign IGNORE NULLS ORDER BY event_timestamp ASC LIMIT 1)[SAFE_OFFSET(0)] 
                           AS first_cross_channel_campaign  ,
