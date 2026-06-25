@@ -239,7 +239,8 @@ CUSTOM_USER_PROPERTIES_ARRAY: [
       {"name": "item_sku","type": "string"},
       {"name": "item_variant","type": "string"},
       {"name": "price","type": "string"},
-      {"name": "quantity","type": "string"}
+      {"name": "quantity","type": "string"},
+      {"name": "item_timer","type": "string"}
   ],
 
   // URL parameters to extract to own column
